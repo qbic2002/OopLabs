@@ -1,7 +1,4 @@
-﻿using System;
-using Isu.Tools;
-
-namespace Isu.Entities
+﻿namespace Isu.Entities
 {
     public class Student
     {

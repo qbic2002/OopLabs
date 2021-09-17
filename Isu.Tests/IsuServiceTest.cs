@@ -1,10 +1,8 @@
 using System;
-using System.ComponentModel.Design;
 using Isu.Entities;
 using Isu.Services;
 using Isu.Tools;
 using NUnit.Framework;
-using Isu.Services;
 
 namespace Isu.Tests
 {

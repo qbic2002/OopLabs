@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Isu.Services;
+using System.Collections.ObjectModel;
 using Isu.Tools;
 using static Isu.Entities.CourseNumberType;
 
@@ -12,6 +12,7 @@ namespace Isu.Entities
         private int _maxStudents;
         private int _numberOfCourses;
         private int _numberOfStudents;
+        private List<Student> _listOfStudents = new List<Student>();
         public Group(string name, char groupLiteral, int groupDigit, int numberOfCourses, int maxNumberOfGroups, int indexOfNumberOfCourse, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup, int maxStudents)
             : this(GetCourseNumber(name, indexOfNumberOfCourse), GetGroupNumber(name, indexOfFirstDigitOfGroup, indexOfSecondDigitOfGroup), numberOfCourses, maxNumberOfGroups)
         {
@@ -36,7 +37,7 @@ namespace Isu.Entities
             }
 
             _numberOfStudents = 0;
-            StudentsInGroup = new List<Student>();
+            StudentsInGroup = new ReadOnlyCollection<Student>(_listOfStudents);
             CourseNumber = courseNumber;
             GroupNumber = numberOfGroup;
         }
@@ -44,7 +45,7 @@ namespace Isu.Entities
         public string FullName { get; }
         public CourseNumber CourseNumber { get; }
         public int GroupNumber { get; }
-        public List<Student> StudentsInGroup { get; }
+        public ReadOnlyCollection<Student> StudentsInGroup { get; }
         public void AddStudent(Student student)
         {
             foreach (Student studentInGroup in StudentsInGroup)
@@ -53,7 +54,7 @@ namespace Isu.Entities
             }
 
             if (_numberOfStudents >= _maxStudents) throw new IsuException("Too many students");
-            StudentsInGroup.Add(student);
+            _listOfStudents.Add(student);
             _numberOfStudents++;
         }
 
@@ -63,7 +64,7 @@ namespace Isu.Entities
             {
                 if (studentInGroup.Name == student.Name)
                 {
-                    StudentsInGroup.Remove(studentInGroup);
+                    _listOfStudents.Remove(studentInGroup);
                     return;
                 }
             }

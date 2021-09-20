@@ -81,7 +81,7 @@ namespace Isu.Services
         public List<Student> FindStudents(string groupName)
         {
             Group group = FindGroup(groupName);
-            if (group != null) return group.StudentsInGroup;
+            if (group != null) return new List<Student>(group.StudentsInGroup);
             return null;
         }
 

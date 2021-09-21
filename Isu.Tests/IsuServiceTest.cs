@@ -10,27 +10,22 @@ namespace Isu.Tests
     public class Tests
     {
         private IIsuService _isuService;
+        private GroupValidator _groupValidator;
 
         [SetUp]
         public void Setup()
         {
-            _isuService = new Service('M',3,4,99,2,3,4,30);
+            _groupValidator = new GroupValidator('M',3,4,30,2,3,4,30);
+            _isuService = new Service(_groupValidator);
         }
 
         [Test]
         public void AddStudentToGroup_StudentHasGroupAndGroupContainsStudent()
         {
-            try
-            {
-                Group m3201 = _isuService.AddGroup("M3201");
-                Student student = _isuService.AddStudent(m3201, "testStudent");
-                Assert.AreEqual(m3201, student.Group);
-                Assert.Contains(student, m3201.StudentsInGroup);
-            }
-            catch (Exception)
-            {
-                Assert.Fail();
-            }
+            Group m3201 = _isuService.AddGroup("M3201");
+            Student student = _isuService.AddStudent(m3201, "testStudent");
+            Assert.AreEqual(m3201, student.Group);
+            Assert.Contains(student, m3201.StudentsInGroup);
         }
 
         [Test]
@@ -52,6 +47,7 @@ namespace Isu.Tests
         [TestCase("MMMMM")]
         [TestCase("M2201")]
         [TestCase(("M3501"))]
+        [TestCase("M3231")]
         public void CreateGroupWithInvalidName_ThrowException(string name)
         {
             Assert.Catch<IsuException>(() =>

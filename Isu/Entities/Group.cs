@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Isu.Tools;
+using Microsoft.VisualBasic.CompilerServices;
 using static Isu.Entities.CourseNumberType;
 
 namespace Isu.Entities
@@ -19,7 +20,6 @@ namespace Isu.Entities
             _maxStudents = maxStudents;
             _groupLiteral = groupLiteral;
             _groupDigit = groupDigit;
-            _numberOfCourses = numberOfCourses;
             if (!NameCheck(name)) throw new IsuException("wrong name of group");
             FullName = name;
         }
@@ -31,10 +31,12 @@ namespace Isu.Entities
                 throw new IsuException($"wrong number of course: {(int)courseNumber}, min: 0, max: {_numberOfCourses}");
             }
 
-            if (numberOfGroup < 1 || numberOfGroup > maxNumberOfGroups)
+            if (numberOfGroup < 0 || numberOfGroup > maxNumberOfGroups)
             {
                 throw new IsuException("wrong number of group");
             }
+
+            _numberOfCourses = numberOfCourses;
 
             _numberOfStudents = 0;
             StudentsInGroup = new ReadOnlyCollection<Student>(_listOfStudents);
@@ -48,26 +50,29 @@ namespace Isu.Entities
         public ReadOnlyCollection<Student> StudentsInGroup { get; }
         public void AddStudent(Student student)
         {
-            foreach (Student studentInGroup in StudentsInGroup)
-            {
-                if (studentInGroup == student) throw new IsuException("Student already in group");
-            }
+            if (_listOfStudents.Contains(student))
+                throw new IsuException("Student already in group");
 
-            if (_numberOfStudents >= _maxStudents) throw new IsuException("Too many students");
+            if (_numberOfStudents >= _maxStudents)
+                throw new IsuException("Too many students");
             _listOfStudents.Add(student);
             _numberOfStudents++;
         }
 
         public void DeleteStudent(Student student)
         {
-            foreach (Student studentInGroup in StudentsInGroup)
-            {
-                if (studentInGroup.Name == student.Name)
-                {
-                    _listOfStudents.Remove(studentInGroup);
-                    return;
-                }
-            }
+            _listOfStudents.Remove(student);
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Group;
+            return other is not null && FullName == other.FullName;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
 
         private static CourseNumber GetCourseNumber(string groupName, int indexOfNumberOfCourse)
@@ -81,9 +86,9 @@ namespace Isu.Entities
         private static int GetGroupNumber(string groupName, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup)
         {
             int groupNumber;
-            if (!int.TryParse(
-                groupName[indexOfFirstDigitOfGroup].ToString() + groupName[indexOfSecondDigitOfGroup].ToString(),
-                out groupNumber)) throw new IsuException("wrong name of group");
+            string stringGroupNumber = groupName[indexOfFirstDigitOfGroup].ToString() +
+                                       groupName[indexOfSecondDigitOfGroup].ToString();
+            if (!int.TryParse(stringGroupNumber, out groupNumber)) throw new IsuException("wrong name of group");
             return groupNumber;
         }
 

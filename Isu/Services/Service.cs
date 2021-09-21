@@ -37,10 +37,8 @@ namespace Isu.Services
         public Group AddGroup(string name)
         {
             var newGroup = new Group(name, _groupLiteral, _groupDigit, _numberOfCourses, _maxNumberOfGroups, _indexOfNumberOfCourse, _indexOfFirstNumberOfGroup, _indexOfSecondNumberOfGroup, _maxStudentsPerGroup);
-            foreach (Group group in _listOfGroupsInEachCourse[(int)newGroup.CourseNumber - 1])
-            {
-                if (group.FullName == name) throw new IsuException("group has been already created");
-            }
+            if (_listOfGroupsInEachCourse[(int)newGroup.CourseNumber - 1].Contains(newGroup))
+                throw new IsuException("group has been already created");
 
             _listOfGroupsInEachCourse[(int)newGroup.CourseNumber - 1].Add(newGroup);
             return newGroup;
@@ -67,15 +65,7 @@ namespace Isu.Services
 
         public Student FindStudent(string name)
         {
-            foreach (Student student in _studentsList)
-            {
-                if (student.Name == name)
-                {
-                    return student;
-                }
-            }
-
-            return null;
+            return _studentsList.Find(student => student.Name == name);
         }
 
         public List<Student> FindStudents(string groupName)
@@ -88,11 +78,7 @@ namespace Isu.Services
         public List<Student> FindStudents(CourseNumber courseNumber)
         {
             var listOfStudentOfCourse = new List<Student>();
-            foreach (Group group in _listOfGroupsInEachCourse[(int)courseNumber - 1])
-            {
-                listOfStudentOfCourse.AddRange(group.StudentsInGroup);
-            }
-
+            _listOfGroupsInEachCourse[(int)courseNumber - 1].ForEach(group => listOfStudentOfCourse.AddRange(group.StudentsInGroup));
             return listOfStudentOfCourse;
         }
 
@@ -100,15 +86,7 @@ namespace Isu.Services
         {
             if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out int numberOfCourse)) throw new IsuException("wrong name of a group");
             if (numberOfCourse < 0 || numberOfCourse > _numberOfCourses) return null;
-            foreach (Group group in _listOfGroupsInEachCourse[numberOfCourse - 1])
-            {
-                if (group.FullName == groupName)
-                {
-                    return group;
-                }
-            }
-
-            return null;
+            return _listOfGroupsInEachCourse[numberOfCourse - 1].Find(group => group.FullName == groupName);
         }
 
         public List<Group> FindGroups(CourseNumber courseNumber)

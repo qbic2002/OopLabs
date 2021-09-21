@@ -24,10 +24,8 @@ namespace Isu.Tests
             {
                 Group m3201 = _isuService.AddGroup("M3201");
                 Student student = _isuService.AddStudent(m3201, "testStudent");
-                if (student.Group != m3201)
-                    Assert.Fail();
-                if (!m3201.StudentsInGroup.Contains(student))
-                    Assert.Fail();
+                Assert.AreEqual(m3201, student.Group);
+                Assert.Contains(student, m3201.StudentsInGroup);
             }
             catch (Exception)
             {
@@ -71,10 +69,8 @@ namespace Isu.Tests
             _isuService.ChangeStudentGroup(student, secondGroup);
             if (firstGroup.StudentsInGroup.Contains(student))
                 Assert.Fail("First group contains the student");
-            if (!secondGroup.StudentsInGroup.Contains(student))
-                Assert.Fail("New group does not contain the student");
-            if (student.Group != secondGroup)
-                Assert.Fail("Wrong student's group");
+            Assert.Contains(student, secondGroup.StudentsInGroup);
+            Assert.AreEqual(secondGroup, student.Group);
         }
         // My tests
         [Test]
@@ -102,10 +98,8 @@ namespace Isu.Tests
             {
                 _isuService.ChangeStudentGroup(student, secondGroup);
             });
-            if (student.Group != firstGroup)
-                Assert.Fail();
-            if (!firstGroup.StudentsInGroup.Contains(student))
-                Assert.Fail();
+            Assert.AreEqual(firstGroup, student.Group);
+            Assert.Contains(student, firstGroup.StudentsInGroup);
         }
     }
 }

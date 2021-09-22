@@ -27,8 +27,7 @@ namespace Isu.Entities
 
         public override bool Equals(object obj)
         {
-            var other = obj as Student;
-            return other is not null && Id == other.Id;
+            return obj is Student student && Id == student.Id;
         }
 
         public override int GetHashCode()

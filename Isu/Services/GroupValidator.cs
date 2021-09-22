@@ -1,6 +1,4 @@
-﻿using System;
-using Isu.Entities;
-using Isu.Tools;
+﻿using Isu.Tools;
 using static Isu.Entities.CourseNumberType;
 
 namespace Isu.Services
@@ -14,19 +12,17 @@ namespace Isu.Services
         private int _indexOfFirstDigitOfGroup;
         private int _indexOfSecondDigitOfGroup;
 
-        public GroupValidator(char groupLiteral, int groupDigit, int numberOfCourses, int maxNumberOfGroups, int indexOfNumberOfCourse, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup, int maxStudentsPerGroup)
+        public GroupValidator(char groupLiteral, int groupDigit, int numberOfCourses, int maxNumberOfGroups, int indexOfNumberOfCourse, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup)
         {
             _groupLiteral = groupLiteral;
             _groupDigit = groupDigit;
             NumberOfCourses = numberOfCourses;
-            MaxStudentsPerGroup = maxStudentsPerGroup;
             _maxNumberOfGroups = maxNumberOfGroups;
             _indexOfNumberOfCourse = indexOfNumberOfCourse;
             _indexOfFirstDigitOfGroup = indexOfFirstDigitOfGroup;
             _indexOfSecondDigitOfGroup = indexOfSecondDigitOfGroup;
         }
 
-        public int MaxStudentsPerGroup { get; }
         public int NumberOfCourses { get; }
         public CourseNumber GetCourseNumber(string groupName)
         {

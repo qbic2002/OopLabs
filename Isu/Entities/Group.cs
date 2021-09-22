@@ -1,25 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Isu.Services;
 using Isu.Tools;
-using static Isu.Entities.CourseNumberType;
 
 namespace Isu.Entities
 {
     public class Group
     {
-        private GroupValidator _groupValidator;
         private int _numberOfStudents;
         private List<Student> _listOfStudents = new List<Student>();
-        public Group(GroupName groupName, GroupValidator groupValidator)
+        private int _maxStudents;
+        public Group(GroupName groupName, int maxStudents)
         {
             StudentsInGroup = new ReadOnlyCollection<Student>(_listOfStudents);
             if (groupName is null)
                 throw new IsuException("Wrong name of group");
-            if (groupValidator is null)
-                throw new IsuException("Incorrect validator");
             GroupName = groupName;
-            _groupValidator = groupValidator;
+            _maxStudents = maxStudents;
         }
 
         public GroupName GroupName { get; }
@@ -29,7 +25,7 @@ namespace Isu.Entities
             if (_listOfStudents.Contains(student))
                 throw new IsuException("Student already in group");
 
-            if (_numberOfStudents >= _groupValidator.MaxStudentsPerGroup)
+            if (_numberOfStudents >= _maxStudents)
                 throw new IsuException("Too many students");
             _listOfStudents.Add(student);
             _numberOfStudents++;
@@ -42,8 +38,7 @@ namespace Isu.Entities
 
         public override bool Equals(object obj)
         {
-            var other = obj as Group;
-            return other is not null && GroupName.Equals(other.GroupName);
+            return obj is Group group && GroupName.Equals(group.GroupName);
         }
 
         public override int GetHashCode()

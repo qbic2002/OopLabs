@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
 using Isu.Entities;
 using Isu.Tools;
 using CourseNumber = Isu.Entities.CourseNumberType.CourseNumber;
@@ -13,7 +11,8 @@ namespace Isu.Services
         private List<Student> _studentsList = new List<Student>();
         private List<List<Group>> _listOfGroupsInEachCourse = new List<List<Group>>();
         private GroupValidator _groupValidator;
-        public Service(GroupValidator groupValidator)
+        private int _maxStudentsPerGroup;
+        public Service(GroupValidator groupValidator, int maxStudentsPerGroup)
         {
             if (groupValidator is null)
                 throw new IsuException("Incorrect validator");
@@ -22,17 +21,18 @@ namespace Isu.Services
             {
                 _listOfGroupsInEachCourse.Add(new List<Group>());
             }
+
+            _maxStudentsPerGroup = maxStudentsPerGroup;
         }
 
         public Group AddGroup(string name)
         {
             var groupName = new GroupName(name, _groupValidator);
-            var newGroup = new Group(groupName, _groupValidator);
+            var newGroup = new Group(groupName, _maxStudentsPerGroup);
             if (_listOfGroupsInEachCourse[(int)newGroup.GroupName.CourseNumber - 1].Contains(newGroup))
                 throw new IsuException("group has been already created");
 
             _listOfGroupsInEachCourse[(int)newGroup.GroupName.CourseNumber - 1].Add(newGroup);
-            Console.WriteLine(_listOfGroupsInEachCourse[(int)newGroup.GroupName.CourseNumber - 1].Count);
             return newGroup;
         }
 
@@ -76,7 +76,7 @@ namespace Isu.Services
 
         public Group FindGroup(string groupName)
         {
-            GroupName nameOfGroup = new GroupName(groupName, _groupValidator);
+            var nameOfGroup = new GroupName(groupName, _groupValidator);
             CourseNumber numberOfCourse = nameOfGroup.CourseNumber;
             return _listOfGroupsInEachCourse[(int)numberOfCourse - 1].Find(group => group.GroupName.Equals(nameOfGroup));
         }

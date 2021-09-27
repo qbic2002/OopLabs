@@ -16,7 +16,7 @@ namespace Isu.Services
             if (groupValidator is null)
                 throw new IsuException("Incorrect validator");
             _groupValidator = groupValidator;
-            for (int i = 0; i < groupValidator.NumberOfCourses; i++)
+            for (int i = 1; i <= groupValidator.NumberOfCourses; i++)
             {
                 _listOfGroupsInEachCourse.Add((CourseNumber)i, new List<Group>());
             }

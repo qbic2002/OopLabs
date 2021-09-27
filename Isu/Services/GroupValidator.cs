@@ -28,7 +28,7 @@ namespace Isu.Services
         {
             if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out int courseNumber))
                 throw new IsuException("wrong name of group");
-            return (CourseNumber)(courseNumber - 1);
+            return (CourseNumber)courseNumber;
         }
 
         public int GetGroupNumber(string groupName)

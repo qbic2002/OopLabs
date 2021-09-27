@@ -5,7 +5,7 @@
         /// <summary>
         /// First course
         /// </summary>
-        First,
+        First = 1,
 
         /// <summary>
         /// Second Course

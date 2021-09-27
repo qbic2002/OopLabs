@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Isu.Entities;
-using CourseNumber = Isu.Entities.CourseNumberType.CourseNumber;
 
 namespace Isu.Services
 {

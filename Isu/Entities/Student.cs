@@ -32,7 +32,7 @@ namespace Isu.Entities
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return Id.GetHashCode();
         }
     }
 }

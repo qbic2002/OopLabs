@@ -43,7 +43,7 @@ namespace Isu.Entities
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return GroupName.GetHashCode();
         }
     }
 }

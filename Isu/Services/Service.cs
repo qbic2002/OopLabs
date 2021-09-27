@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Isu.Entities;
 using Isu.Tools;
-using CourseNumber = Isu.Entities.CourseNumberType.CourseNumber;
 
 namespace Isu.Services
 {
@@ -9,7 +8,7 @@ namespace Isu.Services
     {
         private int _studentId;
         private List<Student> _studentsList = new List<Student>();
-        private List<List<Group>> _listOfGroupsInEachCourse = new List<List<Group>>();
+        private Dictionary<CourseNumber, List<Group>> _listOfGroupsInEachCourse = new ();
         private GroupValidator _groupValidator;
         private int _maxStudentsPerGroup;
         public Service(GroupValidator groupValidator, int maxStudentsPerGroup)
@@ -19,7 +18,7 @@ namespace Isu.Services
             _groupValidator = groupValidator;
             for (int i = 0; i < groupValidator.NumberOfCourses; i++)
             {
-                _listOfGroupsInEachCourse.Add(new List<Group>());
+                _listOfGroupsInEachCourse.Add((CourseNumber)i, new List<Group>());
             }
 
             _maxStudentsPerGroup = maxStudentsPerGroup;
@@ -27,12 +26,13 @@ namespace Isu.Services
 
         public Group AddGroup(string name)
         {
-            var groupName = new GroupName(name, _groupValidator);
+            if (!_groupValidator.NameCheck(name))
+                throw new IsuException("Incorrect name of group");
+            var groupName = new GroupName(name, _groupValidator.GetCourseNumber(name), _groupValidator.GetGroupNumber(name));
             var newGroup = new Group(groupName, _maxStudentsPerGroup);
-            if (_listOfGroupsInEachCourse[(int)newGroup.GroupName.CourseNumber - 1].Contains(newGroup))
+            if (_listOfGroupsInEachCourse[newGroup.GroupName.CourseNumber].Contains(newGroup))
                 throw new IsuException("group has been already created");
-
-            _listOfGroupsInEachCourse[(int)newGroup.GroupName.CourseNumber - 1].Add(newGroup);
+            _listOfGroupsInEachCourse[newGroup.GroupName.CourseNumber].Add(newGroup);
             return newGroup;
         }
 
@@ -43,7 +43,6 @@ namespace Isu.Services
             var student = new Student(group, name, _studentId);
 
             group.AddStudent(student);
-
             _studentsList.Add(student);
             _studentId++;
             return student;
@@ -51,7 +50,8 @@ namespace Isu.Services
 
         public Student GetStudent(int id)
         {
-            if (id >= _studentId) throw new IsuException("Can't find student");
+            if (id >= _studentId)
+                throw new IsuException("Can't find student");
             return _studentsList[id];
         }
 
@@ -63,35 +63,35 @@ namespace Isu.Services
         public List<Student> FindStudents(string groupName)
         {
             Group group = FindGroup(groupName);
-            if (group is not null) return new List<Student>(group.StudentsInGroup);
+            if (group is not null)
+                return new List<Student>(group.StudentsInGroup);
             return null;
         }
 
         public List<Student> FindStudents(CourseNumber courseNumber)
         {
             var listOfStudentOfCourse = new List<Student>();
-            _listOfGroupsInEachCourse[(int)courseNumber - 1].ForEach(group => listOfStudentOfCourse.AddRange(group.StudentsInGroup));
+            _listOfGroupsInEachCourse[courseNumber].ForEach(group => listOfStudentOfCourse.AddRange(group.StudentsInGroup));
             return listOfStudentOfCourse;
         }
 
         public Group FindGroup(string groupName)
         {
-            var nameOfGroup = new GroupName(groupName, _groupValidator);
-            CourseNumber numberOfCourse = nameOfGroup.CourseNumber;
-            return _listOfGroupsInEachCourse[(int)numberOfCourse - 1].Find(group => group.GroupName.Equals(nameOfGroup));
+            if (!_groupValidator.NameCheck(groupName))
+                throw new IsuException("Incorrect name of group");
+            CourseNumber numberOfCourse = _groupValidator.GetCourseNumber(groupName);
+            return _listOfGroupsInEachCourse[numberOfCourse].Find(group => group.GroupName.Name.Equals(groupName));
         }
 
         public List<Group> FindGroups(CourseNumber courseNumber)
         {
-            return _listOfGroupsInEachCourse[(int)courseNumber - 1];
+            return _listOfGroupsInEachCourse[courseNumber];
         }
 
         public void ChangeStudentGroup(Student student, Group newGroup)
         {
             if (newGroup is null)
-            {
                 throw new IsuException("Group does not exist");
-            }
 
             student.ChangeGroup(newGroup);
         }

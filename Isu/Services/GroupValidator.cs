@@ -1,5 +1,5 @@
-﻿using Isu.Tools;
-using static Isu.Entities.CourseNumberType;
+﻿using Isu.Entities;
+using Isu.Tools;
 
 namespace Isu.Services
 {
@@ -26,35 +26,31 @@ namespace Isu.Services
         public int NumberOfCourses { get; }
         public CourseNumber GetCourseNumber(string groupName)
         {
-            int courseNumber;
-            if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out courseNumber))
+            if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out int courseNumber))
                 throw new IsuException("wrong name of group");
-            return (CourseNumber)courseNumber;
+            return (CourseNumber)(courseNumber - 1);
         }
 
         public int GetGroupNumber(string groupName)
         {
-            int groupNumber;
             string stringGroupNumber = groupName[_indexOfFirstDigitOfGroup].ToString() +
                                        groupName[_indexOfSecondDigitOfGroup].ToString();
-            if (!int.TryParse(stringGroupNumber, out groupNumber)) throw new IsuException("wrong name of group");
+            if (!int.TryParse(stringGroupNumber, out int groupNumber))
+                throw new IsuException("wrong name of group");
             return groupNumber;
         }
 
         public bool NameCheck(string groupName)
         {
-            int groupNumber;
-            int courseNumber;
-            int groupDigit;
             if (groupName.Length != 5)
                 return false;
-            if (groupName[0] != _groupLiteral || !int.TryParse(groupName[1].ToString(), out groupDigit) || groupDigit != _groupDigit)
+            if (groupName[0] != _groupLiteral || !int.TryParse(groupName[1].ToString(), out int groupDigit) || groupDigit != _groupDigit)
                 return false;
             string stringGroupNumber = groupName[_indexOfFirstDigitOfGroup].ToString() +
                                        groupName[_indexOfSecondDigitOfGroup].ToString();
-            if (!int.TryParse(stringGroupNumber, out groupNumber))
+            if (!int.TryParse(stringGroupNumber, out int groupNumber))
                 return false;
-            if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out courseNumber))
+            if (!int.TryParse(groupName[_indexOfNumberOfCourse].ToString(), out int courseNumber))
                 return false;
             if (courseNumber < 1 || courseNumber >= NumberOfCourses)
                 return false;

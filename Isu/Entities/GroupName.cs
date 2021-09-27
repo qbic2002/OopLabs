@@ -1,20 +1,12 @@
-﻿using Isu.Services;
-using Isu.Tools;
-using static Isu.Entities.CourseNumberType;
-
-namespace Isu.Entities
+﻿namespace Isu.Entities
 {
     public class GroupName
     {
-        public GroupName(string name, GroupValidator groupValidator)
+        public GroupName(string name, CourseNumber courseNumber, int groupNumber)
         {
-            if (groupValidator is null)
-                throw new IsuException("Incorrect validator");
-            if (!groupValidator.NameCheck(name))
-                throw new IsuException("Incorrect name of group");
             Name = name;
-            CourseNumber = groupValidator.GetCourseNumber(name);
-            GroupNumber = groupValidator.GetGroupNumber(name);
+            CourseNumber = courseNumber;
+            GroupNumber = groupNumber;
         }
 
         public string Name { get; }
@@ -28,7 +20,7 @@ namespace Isu.Entities
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            return Name.GetHashCode();
         }
     }
 }

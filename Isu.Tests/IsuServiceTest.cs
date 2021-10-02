@@ -17,7 +17,7 @@ namespace Isu.Tests
         public void Setup()
         {
             _groupValidator = new GroupValidator('M', 3, 4, 30, 2, 3, 4);
-            _isuService = new Service(_groupValidator, 30);
+            _isuService = new IsuService(_groupValidator, 30);
         }
 
         [Test]
@@ -69,8 +69,6 @@ namespace Isu.Tests
             Assert.Contains(student, secondGroup.StudentsInGroup);
             Assert.AreEqual(secondGroup, student.Group);
         }
-
-        // My tests
 
         [Test]
         public void CreateGroupsWithSameName_ThrowEcxeption()

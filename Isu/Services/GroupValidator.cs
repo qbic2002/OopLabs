@@ -40,11 +40,15 @@ namespace Isu.Services
             return groupNumber;
         }
 
-        public bool NameCheck(string groupName)
+        public bool CheckGroupName(string groupName)
         {
             if (groupName.Length != 5)
                 return false;
-            if (groupName[0] != _groupLiteral || !int.TryParse(groupName[1].ToString(), out int groupDigit) || groupDigit != _groupDigit)
+            if (groupName[0] != _groupLiteral)
+                return false;
+            if (!int.TryParse(groupName[1].ToString(), out int groupDigit))
+                return false;
+            if (groupDigit != _groupDigit)
                 return false;
             string stringGroupNumber = groupName[_indexOfFirstDigitOfGroup].ToString() +
                                        groupName[_indexOfSecondDigitOfGroup].ToString();

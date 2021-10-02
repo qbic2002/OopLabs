@@ -7,9 +7,11 @@ namespace Isu.Entities
         public Student(Group group, string name, int id)
         {
             if (group is null)
-                throw new IsuException("Wrong group");
+                throw new IsuException("Incorrect group");
             if (name is null)
-                throw new IsuException("Wrong name");
+                throw new IsuException("Incorrect name");
+            if (id < 0)
+                throw new IsuException("Incorrect id");
             Group = group;
             Name = name;
             Id = id;

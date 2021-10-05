@@ -1,5 +1,4 @@
-﻿using System;
-using Shops.Tools;
+﻿using Shops.Tools;
 
 namespace Shops.Entities
 {
@@ -9,9 +8,9 @@ namespace Shops.Entities
         {
             if (price <= 0)
                 throw new ShopException("Invalid price of products");
-            Price = price;
             if (count <= 0)
                 throw new ShopException("Invalid number of products");
+            Price = price;
             Count = count;
         }
 
@@ -22,11 +21,15 @@ namespace Shops.Entities
         {
             if (count > Count)
                 throw new ShopException("Not enough items");
+            if (count <= 0)
+                throw new ShopException("Incorrect number of products");
             Count -= count;
         }
 
         public void AddItems(int count)
         {
+            if (count <= 0)
+                throw new ShopException("Incorrect number of products");
             Count += count;
         }
 

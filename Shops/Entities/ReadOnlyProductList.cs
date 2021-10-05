@@ -1,24 +1,22 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Shops.Tools;
 
 namespace Shops.Entities
 {
-    public class ReadOnlyProductList : ReadOnlyDictionary<Product, ProductInfo>
+    public class ReadOnlyProductList
     {
-        public ReadOnlyProductList(IDictionary<Product, ProductInfo> dictionary)
-            : base(dictionary)
+        private ReadOnlyDictionary<Product, ProductInfo> _products;
+        public ReadOnlyProductList(Dictionary<Product, ProductInfo> products)
         {
+            _products = new ReadOnlyDictionary<Product, ProductInfo>(products);
         }
 
-        public decimal GetPrice(Product product, int count = 1)
-        {
-            if (!ContainsKey(product))
-                throw new ShopException("No product");
-            if (this[product].Count < count)
-                throw new ShopException("Not enough items");
-            return this[product].Price * count;
-        }
+        public ICollection Keys => _products.Keys;
+        public ProductInfo this[Product product] => _products[product];
+
+        public bool ContainsKey(Product product) => _products.ContainsKey(product);
     }
 }

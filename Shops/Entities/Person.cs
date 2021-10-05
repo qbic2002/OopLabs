@@ -16,6 +16,8 @@ namespace Shops.Entities
 
         public void ReduceMoney(decimal totalPrice)
         {
+            if (totalPrice <= 0)
+                throw new Exception("Incorrect number of money");
             if (totalPrice > Money)
                 throw new ShopException("Not enough money");
             Money -= totalPrice;

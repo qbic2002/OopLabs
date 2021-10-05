@@ -1,5 +1,4 @@
-﻿using System;
-using Shops.Tools;
+﻿using Shops.Tools;
 
 namespace Shops.Entities
 {
@@ -7,6 +6,8 @@ namespace Shops.Entities
     {
         public Product(string name, int id)
         {
+            if (id < 0)
+                throw new ShopException("Incorrect Id");
             Name = name ?? throw new ShopException("Incorrect name");
             Id = id;
         }

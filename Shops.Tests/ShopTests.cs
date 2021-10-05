@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Shops.Entities;
@@ -116,9 +115,9 @@ namespace Shops.Tests
             Shop shop = _shopManager.AddShop("Shop", "Address");
             Product product = _shopManager.RegisterProduct("test");
             shop.AddProducts(product, firstPrice,1);
-            Assert.AreEqual(firstPrice, shop.Products.GetPrice(product));
+            Assert.AreEqual(firstPrice, shop.GetPrice(new ProductSet(product)));
             shop.ChangePrice(product, newPrice);
-            Assert.AreEqual(newPrice, shop.Products.GetPrice(product));
+            Assert.AreEqual(newPrice, shop.GetPrice(new ProductSet(product)));
         }
 
         [TestCase(1000,10,5,3)]
@@ -127,46 +126,62 @@ namespace Shops.Tests
         {
             Shop shop = _shopManager.AddShop("Shop", "Address");
             Product product = _shopManager.RegisterProduct("test");
+            Product anotherProduct = _shopManager.RegisterProduct("anotherTest");
             var person = new Person(firstMoney);
 
             shop.AddProducts(product, productPrice, productsCount);
-            shop.Buy(person, product, productsToBuyCount);
+            shop.AddProducts(anotherProduct, productPrice, productsCount);
+            shop.Buy(person, new ProductSet(product, productsToBuyCount), new ProductSet(anotherProduct, productsToBuyCount));
 
-            Assert.AreEqual(firstMoney - (productPrice * productsToBuyCount), person.Money);
+            Assert.AreEqual(firstMoney - 2 * (productPrice * productsToBuyCount), person.Money);
             if (productsCount == productsToBuyCount)
-                if (shop.Products.ContainsKey(product))
+            {
+                if (shop.Products.ContainsKey(product) || shop.Products.ContainsKey(anotherProduct))
                     Assert.Fail();
+            }
+
             if (productsCount > productsToBuyCount)
+            {
                 Assert.AreEqual(productsCount - productsToBuyCount, shop.Products[product].Count);
+                Assert.AreEqual(productsCount - productsToBuyCount, shop.Products[anotherProduct].Count);
+            }
         }
 
-        [TestCase(100,100.5,1)]
-        [TestCase(100, 30, 4)]
-        public void PersonBuyProduct_PersonDoNotHasEnoughMoney_ThrowException(decimal money, decimal price, int count)
+        [TestCase(100,100.5,1,1,1)]
+        [TestCase(100, 30, 1,4,1)]
+        [TestCase(199, 50, 50, 2,2)]
+        public void PersonBuyProduct_PersonDoNotHasEnoughMoney_ThrowException(decimal money, decimal firstPrice, decimal secondPrice, int firstCount, int secondCount)
         {
             Shop shop = _shopManager.AddShop("Shop", "Address");
             Product product = _shopManager.RegisterProduct("test");
+            Product anotherProduct = _shopManager.RegisterProduct("anotherTest");
             var person = new Person(money);
 
-            shop.AddProducts(product, price, count);
+            shop.AddProducts(product, firstPrice, firstCount);
+            shop.AddProducts(anotherProduct, secondPrice, secondCount);
+
             Assert.Catch<ShopException>(() =>
             {
-                shop.Buy(person, product, count);
+                shop.Buy(person, new ProductSet(product, firstCount), new ProductSet(anotherProduct, secondCount));
             });
         }
         
-        [TestCase(100,1,5,10)]
-        [TestCase(100,5,5,6)]
-        public void PersonBuyProduct_ShopDoNotHasEnoughProducts_ThrowException(decimal money, decimal price, int countProducts, int countProductsToBuy)
+        [TestCase(100,1,5,10, 1)]
+        [TestCase(100,1,5,6, 6)]
+        [TestCase(100, 1, 5, 5, 7)]
+        [TestCase(100, 1, 5, 3, 7)]
+        public void PersonBuyProduct_ShopDoNotHasEnoughProducts_ThrowException(decimal money, decimal price, int countProducts, int countFirstProductsToBuy, int countSecondProductsToBuy)
         {
             Shop shop = _shopManager.AddShop("Shop", "Address");
             Product product = _shopManager.RegisterProduct("test");
+            Product anotherProduct = _shopManager.RegisterProduct("anotherTest");
             var person = new Person(money);
 
             shop.AddProducts(product, price, countProducts);
+            shop.AddProducts(anotherProduct, price, countProducts);
             Assert.Catch<ShopException>(() =>
             {
-                shop.Buy(person, product, countProductsToBuy);
+                shop.Buy(person, new ProductSet(product, countFirstProductsToBuy), new ProductSet(anotherProduct, countSecondProductsToBuy));
             });
         }
 
@@ -181,22 +196,57 @@ namespace Shops.Tests
             shop.AddProducts(product, 1, 1);
             Assert.Catch<ShopException>(() =>
             {
-                shop.Buy(person, extraProduct, 1);
+                shop.Buy(person, new ProductSet(extraProduct));
             });
         }
 
         [Test]
         public void FindShopWithLowestPrice()
         {
-            Product product = _shopManager.RegisterProduct("test");
-            for (int i = 1; i <= 10; i++)
-            {
-                _shopManager.AddShop(i.ToString(), "Address").AddProducts(product, i, i);
-            }
+            Shop shop1 = _shopManager.AddShop("test1", "street1");
+            Shop shop2 = _shopManager.AddShop("test2", "street2");
+            Shop shop3 = _shopManager.AddShop("test3", "street3");
 
-            Shop shop = _shopManager.AddShop("lowestPrice", "Adress");
-            shop.AddProducts(product, 4, 5);
-            Assert.AreEqual(shop, _shopManager.LowestPrice(product, 5));
+            Product product1 = _shopManager.RegisterProduct("first");
+            Product product2 = _shopManager.RegisterProduct("second");
+            Product product3 = _shopManager.RegisterProduct("third");
+            
+            shop1.AddProducts(product1, 100, 100);
+            shop1.AddProducts(product2, 10, 100);
+            shop1.AddProducts(product3, 99, 10);
+            
+            shop2.AddProducts(product1, 10, 100);
+            shop2.AddProducts(product2, 100, 100);
+            shop2.AddProducts(product3, 100, 11);
+            
+            shop3.AddProducts(product1, 100, 10);
+            shop3.AddProducts(product2, 10, 100);
+            shop3.AddProducts(product3, 100, 100);
+
+            var set1 = new List<ProductSet>
+            {
+                new ProductSet(product1, 100),
+                new ProductSet(product2, 100),
+                new ProductSet(product3, 10)
+            };
+
+            var set2 = new List<ProductSet>
+            {
+                new ProductSet(product1, 100),
+                new ProductSet(product2, 100),
+                new ProductSet(product3, 11)
+            };
+
+            var set3 = new List<ProductSet>
+            {
+                new ProductSet(product1, 10),
+                new ProductSet(product2, 100),
+                new ProductSet(product3, 100)
+            };
+
+            Assert.AreEqual(shop1, _shopManager.LowestPrice(set1.ToArray()));
+            Assert.AreEqual(shop2, _shopManager.LowestPrice(set2.ToArray()));
+            Assert.AreEqual(shop3, _shopManager.LowestPrice(set3.ToArray()));
         }
     }
 }

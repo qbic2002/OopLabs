@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Shops.Entities;
 using Shops.Tools;
 
@@ -26,6 +24,10 @@ namespace Shops.Services
         public ReadOnlyCollection<Product> ListOfProducts { get; }
         public Shop AddShop(string name, string address)
         {
+            if (name is null)
+                throw new ShopException("Incorrect name of shop");
+            if (address is null)
+                throw new ShopException("Incorrect address");
             var newShop = new Shop(name, address, _shopId);
             _listOfShops.Add(newShop);
             _shopId++;
@@ -34,34 +36,22 @@ namespace Shops.Services
 
         public Product RegisterProduct(string name)
         {
+            if (name is null)
+                throw new ShopException("Incorrect name of product");
             var newProduct = new Product(name, _productId);
             _listOfProducts.Add(newProduct);
             _productId++;
             return newProduct;
         }
 
-        public Shop LowestPrice(Product product, int count)
+        public Shop LowestPrice(params ProductSet[] productSets)
         {
-            if (count <= 0)
-                throw new ShopException("Invalid number of products");
-            var listOfShopsWithThisProduct = new List<Shop>();
-            _listOfShops.ForEach(shop =>
-            {
-                if (shop.Products.ContainsKey(product) && shop.Products[product].Count >= count)
-                    listOfShopsWithThisProduct.Add(shop);
-            });
-            if (listOfShopsWithThisProduct.Count == 0)
-                throw new ShopException("Can't find shops withs this product");
-            decimal minPrice = listOfShopsWithThisProduct[0].Products.GetPrice(product, count);
-            Shop shopWithMinPrice = listOfShopsWithThisProduct[0];
-            listOfShopsWithThisProduct.ForEach(shop =>
-            {
-                if (shop.Products.GetPrice(product, count) < minPrice)
-                {
-                    minPrice = shop.Products.GetPrice(product, count);
-                    shopWithMinPrice = shop;
-                }
-            });
+            if (productSets is null || productSets.Length == 0)
+                throw new ShopException("Incorrect set of products");
+            var listOfShopsWithThisProduct = _listOfShops.Where(shop => shop.IsContains(productSets)).ToList();
+            if (listOfShopsWithThisProduct.Count == 0 || listOfShopsWithThisProduct is null)
+                throw new ShopException("Can't find shops with this products");
+            Shop shopWithMinPrice = listOfShopsWithThisProduct.OrderBy(shop => shop.GetPrice(productSets)).FirstOrDefault();
             return shopWithMinPrice;
         }
     }

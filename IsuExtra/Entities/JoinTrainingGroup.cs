@@ -1,21 +1,69 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using Isu.Entities;
+using IsuExtra.Services;
 using IsuExtra.Tools;
 
 namespace IsuExtra.Entities
 {
     public class JoinTrainingGroup
     {
-        public JoinTrainingGroup(Faculty faculty, Timetable timetable, int limitOfStudents)
+        private List<Thread> _threads = new List<Thread>();
+
+        public JoinTrainingGroup(Faculty faculty)
         {
-            Timetable = timetable ?? throw new IsuExtraException("Incorrect timetable");
-            if (limitOfStudents <= 0)
-                throw new IsuExtraException("Incorrect limit of students");
             Faculty = faculty;
-            LimitOfStudents = limitOfStudents;
+            Threads = new ReadOnlyCollection<Thread>(_threads);
         }
 
         public Faculty Faculty { get; }
-        public Timetable Timetable { get; }
-        public int LimitOfStudents { get; }
+        public ReadOnlyCollection<Thread> Threads { get; }
+
+        public void AddThread(Thread thread)
+        {
+            if (thread is null)
+                throw new IsuExtraException("Incorrect thread");
+            if (_threads.Contains(thread))
+                throw new IsuExtraException("Thread already exists");
+            _threads.Add(thread);
+        }
+
+        public void AddStudent(Student student, Thread thread)
+        {
+            if (student is null)
+                throw new IsuExtraException("Incorrect student");
+            if (thread is null || !_threads.Contains(thread))
+                throw new IsuExtraException("Incorrect thread");
+            thread.AddStudent(student);
+        }
+
+        public bool CheckForStudent(Thread thread, Student student)
+        {
+            if (thread is null)
+                throw new IsuExtraException("Incorrect thread");
+            if (!_threads.Contains(thread))
+                return false;
+            if (Contains(student))
+                return false;
+            if (thread.NumberOfStudents < thread.LimitOfStudents)
+                return true;
+            return false;
+        }
+
+        public bool Contains(Student student)
+        {
+            if (student is null)
+                throw new IsuExtraException("Incorrect student");
+            return _threads.Exists(thread => thread.Students.Contains(student));
+        }
+
+        public void DeleteStudent(Student student)
+        {
+            if (student is null)
+                throw new IsuExtraException("Incorrect student");
+            _threads.Find(thread => thread.Students.Contains(student))?.DeleteStudent(student);
+        }
     }
 }

@@ -13,9 +13,9 @@
         Tuesday,
 
         /// <summary>
-        /// Wednsday
+        /// Wednesday
         /// </summary>
-        Wednsday,
+        Wednesday,
 
         /// <summary>
         /// Thursday

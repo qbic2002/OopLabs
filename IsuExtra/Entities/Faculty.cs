@@ -31,5 +31,10 @@
         /// Institute for International Development and Partnership
         /// </summary>
         IDP = 5,
+
+        /// <summary>
+        /// Faculty of Life Science
+        /// </summary>
+        LS = 6,
     }
 }

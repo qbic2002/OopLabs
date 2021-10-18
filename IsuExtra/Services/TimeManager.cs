@@ -162,6 +162,8 @@ namespace IsuExtra.Services
 
         public Timetable GetTimetable(Student student)
         {
+            if (student is null)
+                throw new IsuExtraException("Incorrect Student");
             if (!_timetableAndStudents.ContainsKey(student))
             {
                 if (!_timetableAndGroup.ContainsKey(student.Group))
@@ -174,6 +176,10 @@ namespace IsuExtra.Services
 
         public void AddJTGTimetableToStudent(Timetable timetable, Student student)
         {
+            if (timetable is null)
+                throw new IsuExtraException("Incorrect timetable");
+            if (student is null)
+                throw new IsuExtraException("Incorrect Student");
             _timetableAndStudents[student] = MergeTimetable(timetable, GetTimetable(student));
         }
     }

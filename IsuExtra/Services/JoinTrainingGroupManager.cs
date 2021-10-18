@@ -135,6 +135,8 @@ namespace IsuExtra.Services
 
         private bool CheckJTGForStudent(Student student, JoinTrainingGroup jtGroup, Thread thread)
         {
+            if (student is null)
+                throw new IsuExtraException("Incorrect Student");
             if (jtGroup is null)
                 throw new IsuExtraException("Incorrect JTG group");
             if (thread is null)

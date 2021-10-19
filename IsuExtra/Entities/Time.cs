@@ -1,7 +1,5 @@
 ﻿using System;
-using Isu.Tools;
 using IsuExtra.Tools;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace IsuExtra.Entities
 {

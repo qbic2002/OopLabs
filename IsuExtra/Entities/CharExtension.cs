@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace IsuExtra.Entities
+﻿namespace IsuExtra.Entities
 {
     public static class CharExtension
     {

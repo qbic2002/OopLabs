@@ -63,7 +63,6 @@ namespace IsuExtra.Entities
             {
                 if (firstTime.Minutes < secondTime.Minutes)
                     return true;
-                return false;
             }
 
             return false;
@@ -80,7 +79,6 @@ namespace IsuExtra.Entities
             {
                 if (firstTime.Minutes > secondTime.Minutes)
                     return true;
-                return false;
             }
 
             return false;

@@ -11,17 +11,20 @@ namespace IsuExtra.Entities
         {
             if (jtgroup is null)
                 throw new IsuExtraException("Incorrect JTGroup");
+
             if (FirstJTG is null)
             {
                 FirstJTG = jtgroup;
+                return;
             }
-            else
+
+            if (SecondJTG is null)
             {
-                if (SecondJTG is null)
-                    SecondJTG = jtgroup;
-                else
-                    throw new IsuExtraException("Already consists two JTGroups");
+                SecondJTG = jtgroup;
+                return;
             }
+
+            throw new IsuExtraException("Already consists two JTGroups");
         }
 
         public bool IsEmpty()

@@ -12,6 +12,19 @@ namespace IsuExtra
     {
         private static void Main()
         {
+            List<int> list1 = new List<int>()
+            {
+                55,
+                1,
+                2,
+            };
+            List<int> list2 = new List<int>()
+            {
+                55,
+                2,
+                1,
+            };
+            Console.WriteLine(list1.SequenceEqual(list2));
         }
     }
 }

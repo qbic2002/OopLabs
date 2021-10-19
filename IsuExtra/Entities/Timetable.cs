@@ -30,15 +30,9 @@ namespace IsuExtra.Entities
             var timetable = obj as Timetable;
             if (timetable is null)
                 return false;
-            bool isEducationDaysEquals = true;
-            if (DayList.Count != timetable.DayList.Count)
+            if (_daysList.Count != timetable._daysList.Count)
                 return false;
-            _daysList.ForEach(educationDay =>
-            {
-                if (!timetable.DayList.Contains(educationDay))
-                    isEducationDaysEquals = false;
-            });
-            return isEducationDaysEquals;
+            return _daysList.All(day => timetable._daysList.Contains(day));
         }
 
         public override int GetHashCode()

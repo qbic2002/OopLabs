@@ -101,7 +101,6 @@ namespace IsuExtra.Tests
             
             _timeManager.AssociateTimetableWithGroup(timetable, m3201);
             
-            Lesson jtgLesson1 = _timeManager.AddLesson(LessonsTemplate.Zero, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
             EducationDay jtgMonday = _timeManager.AddEducationDay(WeekDays.Monday, lesson1);
             Lesson jtgLesson2 = _timeManager.AddLesson(LessonsTemplate.Second, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
             EducationDay jtgTuesday = _timeManager.AddEducationDay(WeekDays.Tuesday, jtgLesson2);

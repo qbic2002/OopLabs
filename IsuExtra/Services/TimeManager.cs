@@ -72,18 +72,7 @@ namespace IsuExtra.Services
             if (firstDay.Day != secondDay.Day)
                 return false;
 
-            bool isIntersects = false;
-            firstDay.Lessons.ToList().ForEach(firstLesson =>
-            {
-                secondDay.Lessons.ToList().ForEach(secondLesson =>
-                {
-                    if (IsIntersects(firstLesson, secondLesson))
-                    {
-                        isIntersects = true;
-                    }
-                });
-            });
-            return isIntersects;
+            return firstDay.Lessons.Any(firstLesson => secondDay.Lessons.Any(secondLesson => IsIntersects(firstLesson, secondLesson)));
         }
 
         public static bool IsIntersects(Timetable firstTimetable, Timetable secondTimetable)
@@ -91,18 +80,7 @@ namespace IsuExtra.Services
             if (firstTimetable is null || secondTimetable is null)
                 throw new IsuExtraException("Incorrect timetables");
 
-            bool isIntersect = false;
-            firstTimetable.DayList.ToList().ForEach(firstDay =>
-            {
-                secondTimetable.DayList.ToList().ForEach(secondDay =>
-                {
-                    if (IsIntersects(firstDay, secondDay))
-                    {
-                        isIntersect = true;
-                    }
-                });
-            });
-            return isIntersect;
+            return firstTimetable.DayList.Any(firstDay => secondTimetable.DayList.Any(secondDay => IsIntersects(firstDay, secondDay)));
         }
 
         public Lesson AddLesson(Time startTime, Time endTime, Teacher teacher, ClassRoom classRoom)

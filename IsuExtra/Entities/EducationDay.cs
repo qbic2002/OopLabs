@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Isu.Entities;
 using IsuExtra.Services;
 using IsuExtra.Tools;
 
@@ -37,20 +38,14 @@ namespace IsuExtra.Entities
 
         public override bool Equals(object obj)
         {
-            if (obj is null)
-                return false;
             var educationDay = obj as EducationDay;
+            if (educationDay is null)
+                return false;
             if (Day != educationDay.Day)
                 return false;
-            if (educationDay._lessons.Count != _lessons.Count)
+            if (_lessons.Count != educationDay._lessons.Count)
                 return false;
-            bool isContains = true;
-            _lessons.ForEach(lesson =>
-            {
-                if (!educationDay._lessons.Contains(lesson))
-                    isContains = false;
-            });
-            return isContains;
+            return _lessons.All(lesson => educationDay._lessons.Contains(lesson));
         }
 
         public override int GetHashCode()

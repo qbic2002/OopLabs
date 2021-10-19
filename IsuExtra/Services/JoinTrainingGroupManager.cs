@@ -10,7 +10,6 @@ namespace IsuExtra.Services
 {
     public class JoinTrainingGroupManager
     {
-        private Dictionary<char, Faculty> _groupLiteralAndFaculties = new Dictionary<char, Faculty>();
         private Dictionary<Student, JTGroupsOfStudent> _studentsAndJTG = new Dictionary<Student, JTGroupsOfStudent>();
         private int _teacherId = 0;
         private TimeManager _timeManager;
@@ -19,19 +18,6 @@ namespace IsuExtra.Services
             if (timeManager is null)
                 throw new IsuExtraException("Incorrect time manager");
             _timeManager = timeManager;
-            _groupLiteralAndFaculties.Add('B', Faculty.PT);
-            _groupLiteralAndFaculties.Add('D', Faculty.IDP);
-            _groupLiteralAndFaculties.Add('K', Faculty.TIT);
-            _groupLiteralAndFaculties.Add('L', Faculty.PT);
-            _groupLiteralAndFaculties.Add('M', Faculty.TIT);
-            _groupLiteralAndFaculties.Add('N', Faculty.CTM);
-            _groupLiteralAndFaculties.Add('P', Faculty.CTM);
-            _groupLiteralAndFaculties.Add('R', Faculty.CTM);
-            _groupLiteralAndFaculties.Add('T', Faculty.LS);
-            _groupLiteralAndFaculties.Add('U', Faculty.TMI);
-            _groupLiteralAndFaculties.Add('V', Faculty.PT);
-            _groupLiteralAndFaculties.Add('W', Faculty.BLTS);
-            _groupLiteralAndFaculties.Add('Z', Faculty.PT);
         }
 
         public JoinTrainingGroup AddJTG(Faculty faculty)
@@ -122,7 +108,7 @@ namespace IsuExtra.Services
             if (jtGroup is null)
                 throw new IsuExtraException("Incorrect JTGroup");
 
-            if (jtGroup.Faculty == _groupLiteralAndFaculties[student.Group.GroupName.Name[0]])
+            if (jtGroup.Faculty == student.Group.GroupName.Name[0].GetFaculty())
                 return false;
             if (!_studentsAndJTG.ContainsKey(student))
                 _studentsAndJTG.Add(student, new JTGroupsOfStudent());

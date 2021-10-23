@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Isu.Entities;
 using IsuExtra.Entities;
@@ -88,7 +89,8 @@ namespace IsuExtra.Services
                 throw new IsuExtraException("incorrect thread");
             if (!jtGroup.Threads.Contains(thread))
                 throw new IsuExtraException("Thread not in this group");
-
+            if (thread.Students.Count == 0)
+                throw new IsuExtraException("No students");
             return thread.Students.ToList();
         }
 
@@ -100,6 +102,8 @@ namespace IsuExtra.Services
                 throw new IsuExtraException("Group does not contain threads");
             var listOfStudents = new List<Student>();
             jtGroup.Threads.ToList().ForEach(thread => listOfStudents.AddRange(thread.Students));
+            if (listOfStudents.Count == 0)
+                throw new IsuExtraException("No students");
             return listOfStudents;
         }
 
@@ -107,7 +111,10 @@ namespace IsuExtra.Services
         {
             if (group is null)
                 throw new IsuExtraException("Incorrect group");
-            return group.StudentsInGroup.Where(student => !_studentsAndJTG.ContainsKey(student) || _studentsAndJTG[student].IsEmpty()).ToList();
+            var listOfStudents = group.StudentsInGroup.Where(student => !_studentsAndJTG.ContainsKey(student) || _studentsAndJTG[student].IsEmpty()).ToList();
+            if (listOfStudents.Count == 0)
+                throw new IsuExtraException("No students");
+            return listOfStudents;
         }
 
         private bool CheckStudentForJTG(Student student, JoinTrainingGroup jtGroup)

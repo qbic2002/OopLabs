@@ -176,7 +176,7 @@ namespace IsuExtra.Tests
         }
         
         [Test]
-        public void GetListOfStudents()
+        public void GetListOfStudentsOfThread()
         {
             Group m3201 = _isuService.AddGroup("M3201");
 
@@ -227,6 +227,51 @@ namespace IsuExtra.Tests
             Assert.AreEqual(secondExpectedList.Count, listOfStudentsInThread.Count);
         }
 
+        [Test]
+        public void GetListOfStudentsOfJTG()
+        {
+            Group m3201 = _isuService.AddGroup("M3201");
+
+            Lesson lesson1 = _timeManager.AddLesson(LessonsTemplate.First, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
+            EducationDay monday = _timeManager.AddEducationDay(WeekDays.Monday, lesson1);
+            Lesson lesson2 = _timeManager.AddLesson(LessonsTemplate.Zero, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
+            EducationDay tuesday = _timeManager.AddEducationDay(WeekDays.Tuesday, lesson2);
+            Timetable timetable = _timeManager.AddTimetable(monday, tuesday);
+            
+            _timeManager.AssociateTimetableWithGroup(timetable, m3201);
+            
+            Lesson jtgLesson1 = _timeManager.AddLesson(LessonsTemplate.Zero, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
+            EducationDay jtgMonday = _timeManager.AddEducationDay(WeekDays.Monday, jtgLesson1);
+            Lesson jtgLesson2 = _timeManager.AddLesson(LessonsTemplate.Second, _jtgManager.AddTeacher("Test"), new ClassRoom(111));
+            EducationDay jtgTuesday = _timeManager.AddEducationDay(WeekDays.Tuesday, jtgLesson2);
+            Timetable jtgFirstTimetable = _timeManager.AddTimetable(jtgMonday, jtgTuesday);
+            
+            Timetable jtgSecondTimetable = _timeManager.AddTimetable(jtgTuesday);
+
+            JoinTrainingGroup jtGroup = _jtgManager.AddJTG(Faculty.CTM);
+            Thread firstThread = _jtgManager.AddThread(jtGroup, jtgFirstTimetable, 30);
+            Thread secondThread = _jtgManager.AddThread(jtGroup, jtgSecondTimetable, 30);
+            
+            Student studentA = _isuService.AddStudent(m3201, "testA");
+            Student studentB = _isuService.AddStudent(m3201, "testB");
+            Student studentC = _isuService.AddStudent(m3201, "testC");
+            
+            _jtgManager.AddJTGToStudent(studentA, jtGroup, firstThread);
+            _jtgManager.AddJTGToStudent(studentB, jtGroup, secondThread);
+            _jtgManager.AddJTGToStudent(studentC, jtGroup, firstThread);
+
+            var expectedList = new List<Student>()
+            {
+                studentA,
+                studentB,
+                studentC
+            };
+            
+            List<Student> listOfStudentsInJTG = _jtgManager.GetStudents(jtGroup);
+            expectedList.ForEach(student => Assert.Contains(student, listOfStudentsInJTG));
+            Assert.AreEqual(expectedList.Count, listOfStudentsInJTG.Count);
+        }
+        
         [Test]
         public void GetFreeStudentsInGroup()
         {

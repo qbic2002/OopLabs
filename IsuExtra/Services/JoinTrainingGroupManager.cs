@@ -92,6 +92,17 @@ namespace IsuExtra.Services
             return thread.Students.ToList();
         }
 
+        public List<Student> GetStudents(JoinTrainingGroup jtGroup)
+        {
+            if (jtGroup is null)
+                throw new IsuExtraException("Incorrect JTG group");
+            if (jtGroup.Threads.Count == 0)
+                throw new IsuExtraException("Group does not contain threads");
+            var listOfStudents = new List<Student>();
+            jtGroup.Threads.ToList().ForEach(thread => listOfStudents.AddRange(thread.Students));
+            return listOfStudents;
+        }
+
         public List<Student> GetFreeStudents(Group group)
         {
             if (group is null)

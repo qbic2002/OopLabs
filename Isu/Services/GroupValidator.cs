@@ -1,20 +1,23 @@
-﻿using Isu.Entities;
+﻿using System.Collections.Generic;
+using Isu.Entities;
 using Isu.Tools;
 
 namespace Isu.Services
 {
     public class GroupValidator
     {
-        private static char _groupLiteral;
+        private static List<char> _groupLiterals;
         private static int _groupDigit;
         private int _indexOfNumberOfCourse;
         private int _maxNumberOfGroups;
         private int _indexOfFirstDigitOfGroup;
         private int _indexOfSecondDigitOfGroup;
 
-        public GroupValidator(char groupLiteral, int groupDigit, int numberOfCourses, int maxNumberOfGroups, int indexOfNumberOfCourse, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup)
+        public GroupValidator(List<char> groupLiterals, int groupDigit, int numberOfCourses, int maxNumberOfGroups, int indexOfNumberOfCourse, int indexOfFirstDigitOfGroup, int indexOfSecondDigitOfGroup)
         {
-            _groupLiteral = groupLiteral;
+            if (groupLiterals is null)
+                throw new IsuException("Incorrect literals");
+            _groupLiterals = groupLiterals;
             _groupDigit = groupDigit;
             NumberOfCourses = numberOfCourses;
             _maxNumberOfGroups = maxNumberOfGroups;
@@ -44,7 +47,7 @@ namespace Isu.Services
         {
             if (groupName.Length != 5)
                 return false;
-            if (groupName[0] != _groupLiteral)
+            if (!_groupLiterals.Contains(groupName[0]))
                 return false;
             if (!int.TryParse(groupName[1].ToString(), out int groupDigit))
                 return false;

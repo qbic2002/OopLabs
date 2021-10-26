@@ -16,7 +16,7 @@ namespace Isu.Tests
         [SetUp]
         public void Setup()
         {
-            _groupValidator = new GroupValidator('M', 3, 4, 30, 2, 3, 4);
+            _groupValidator = new GroupValidator(new List<char>{'M'}, 3, 4, 30, 2, 3, 4);
             _isuService = new IsuService(_groupValidator, 30);
         }
 

@@ -1,9 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using Backups.Entities;
 using Backups.Services;
-using Backups.Tools;
 using NUnit.Framework;
 
 namespace Backups.Tests
@@ -18,6 +16,8 @@ namespace Backups.Tests
         public void Setup()
         {
             _backupManager = new BackupManager();
+            if (!Directory.Exists(@"./Test"))
+                Directory.CreateDirectory(@"./Test");
             if (Directory.Exists(@"./Test/TestJob"))
                 Directory.Delete(@"./Test/TestJob", true);
             localRepository = _backupManager.AddLocalRepository("TestJob");
@@ -26,9 +26,12 @@ namespace Backups.Tests
         [Test]
         public void CreateSplitStorageBackupJob()
         {
+            File.Create(@".\Test\File1.txt").Dispose();
+            File.Create(@".\Test\File2.txt").Dispose();
+            
             JobObject jobObject1 = _backupManager.AddJobObject(@".\Test\File1.txt");
             JobObject jobObject2 = _backupManager.AddJobObject(@".\Test\File2.txt");
-
+            
             BackupJob job = _backupManager.AddBackupJob("TestJob", localRepository, Algorithms.SplitStorage, jobObject1, jobObject2);
             job.RemoveJobObject(jobObject1);
             Assert.AreEqual(2, job.RestorePoints.Count);

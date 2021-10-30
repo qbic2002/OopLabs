@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Backups.Entities;
 using Backups.Tools;
 
@@ -9,10 +7,7 @@ namespace Backups.Services
     public class BackupManager
     {
         private List<BackupJob> _backupJobs = new ();
-        private string _rootPath = @"C:\Users\golov\Backups";
-        public BackupManager()
-        {
-        }
+        private string _rootPath = @".\Test";
 
         public BackupJob AddBackupJob(string name, IRepository repository, Algorithms.StorageAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {

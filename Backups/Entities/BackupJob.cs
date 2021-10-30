@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Backups.Tools;
 
@@ -19,11 +19,15 @@ namespace Backups.Entities
             _jobObjects = jobObjects.ToList();
             _storageAlgorithm = storageAlgorithm ?? throw new BackupException("Incorrect algorithm");
 
+            JobObjects = new ReadOnlyCollection<JobObject>(_jobObjects);
+            RestorePoints = new ReadOnlyCollection<RestorePoint>(_restorePoints);
             CreateRestorePoint();
         }
 
         public string Name { get; }
         public IRepository Repository { get; }
+        public ReadOnlyCollection<JobObject> JobObjects { get; }
+        public ReadOnlyCollection<RestorePoint> RestorePoints { get; }
 
         public RestorePoint CreateRestorePoint()
         {

@@ -9,8 +9,8 @@ namespace Backups.Entities
     {
         private List<JobObject> _jobObjects;
         private List<RestorePoint> _restorePoints = new ();
-        private Algorithms.StorageAlgorithm _storageAlgorithm;
-        public BackupJob(IRepository repository, string name, Algorithms.StorageAlgorithm storageAlgorithm, params JobObject[] jobObjects)
+        private IAlgorithm _storageAlgorithm;
+        public BackupJob(IRepository repository, string name, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {
             Repository = repository ?? throw new BackupException("Incorrect repository");
             Name = name ?? throw new BackupException("Incorrect name");
@@ -33,6 +33,8 @@ namespace Backups.Entities
         {
             var restorePoint = new RestorePoint(Repository, _restorePoints.Count + 1, _storageAlgorithm, _jobObjects.ToArray());
             _restorePoints.Add(restorePoint);
+            restorePoint.AddRestorePointToRepository();
+            restorePoint.CreateStorage();
             return restorePoint;
         }
 

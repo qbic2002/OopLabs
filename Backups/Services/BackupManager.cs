@@ -9,7 +9,7 @@ namespace Backups.Services
         private List<BackupJob> _backupJobs = new ();
         private string _rootPath = @".\Test";
 
-        public BackupJob AddBackupJob(string name, IRepository repository, Algorithms.StorageAlgorithm storageAlgorithm, params JobObject[] jobObjects)
+        public BackupJob AddBackupJob(string name, IRepository repository, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {
             if (name is null)
                 throw new BackupException("Incorrect name of Job");

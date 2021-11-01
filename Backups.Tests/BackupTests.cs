@@ -32,7 +32,7 @@ namespace Backups.Tests
             JobObject jobObject1 = _backupManager.AddJobObject(@".\Test\File1.txt");
             JobObject jobObject2 = _backupManager.AddJobObject(@".\Test\File2.txt");
             
-            BackupJob job = _backupManager.AddBackupJob("TestJob", localRepository, Algorithms.SplitStorage, jobObject1, jobObject2);
+            BackupJob job = _backupManager.AddBackupJob("TestJob", localRepository, new SplitStorage(), jobObject1, jobObject2);
             job.RemoveJobObject(jobObject1);
             Assert.AreEqual(2, job.RestorePoints.Count);
             int numberOfStorages = 0;

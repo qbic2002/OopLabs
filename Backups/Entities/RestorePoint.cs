@@ -9,10 +9,10 @@ namespace Backups.Entities
     public class RestorePoint
     {
         private List<JobObject> _jobObjects = new ();
-        private Algorithms.StorageAlgorithm _storageAlgorithm;
+        private IAlgorithm _storageAlgorithm;
         private List<Storage> _storages = new ();
         private IRepository _repository;
-        public RestorePoint(IRepository repository, int number, Algorithms.StorageAlgorithm storageAlgorithm, params JobObject[] jobObjects)
+        public RestorePoint(IRepository repository, int number, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {
             _repository = repository ?? throw new BackupException("Incorrect repository");
             if (number <= 0)
@@ -22,22 +22,24 @@ namespace Backups.Entities
             DateTime = DateTime.Now;
             if (jobObjects is null || jobObjects.Length == 0)
                 throw new BackupException("Incorrect objects");
-            jobObjects.ToList().ForEach(_jobObjects.Add);
-
+            _jobObjects.AddRange(jobObjects);
             JobObjects = new ReadOnlyCollection<JobObject>(_jobObjects);
-            _repository.AddRestorePoint(this);
-            CreateStorage();
         }
 
         public DateTime DateTime { get; }
         public int Number { get; }
         public ReadOnlyCollection<JobObject> JobObjects { get; }
 
-        private void CreateStorage()
+        public void CreateStorage()
         {
-            List<Storage> storages = _storageAlgorithm(_jobObjects.ToArray());
+            List<Storage> storages = _storageAlgorithm.DoStrategy(_jobObjects.ToArray());
             _storages.AddRange(storages);
             _repository.AddStorages(this, storages.ToArray());
+        }
+
+        public void AddRestorePointToRepository()
+        {
+            _repository.AddRestorePoint(this);
         }
     }
 }

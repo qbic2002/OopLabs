@@ -15,8 +15,7 @@ namespace Backups.Entities
                 throw new BackupException("Incorrect path to Jobs");
             if (nameOfJob is null)
                 throw new BackupException("Incorrect name of Job");
-
-            Path = string.Concat(pathToJobs, @"\", nameOfJob);
+            Path = System.IO.Path.Combine(pathToJobs, nameOfJob);
             CreateRepository();
         }
 
@@ -35,7 +34,9 @@ namespace Backups.Entities
         {
             if (restorePoint is null)
                 throw new BackupException("Incorrect restore Point");
-            string restorePointPath = string.Concat(Path, @"\RP", restorePoint.Number);
+
+            string restorePointName = string.Concat("RP", restorePoint.Number);
+            string restorePointPath = System.IO.Path.Combine(Path, restorePointName);
             if (Directory.Exists(restorePointPath))
                 throw new BackupException("Restore point already created");
             Directory.CreateDirectory(restorePointPath);
@@ -45,10 +46,12 @@ namespace Backups.Entities
         {
             if (restorePoint is null)
                 throw new BackupException("Incorrect restore Point");
-            string restorePointPath = string.Concat(Path, @"\RP", restorePoint.Number);
+            string restorePointName = string.Concat("RP", restorePoint.Number);
+            string restorePointPath = System.IO.Path.Combine(Path, restorePointName);
             storages.ToList().ForEach(storage =>
             {
-                string storagePath = string.Concat(restorePointPath, @"\", storage.Name, ".zip");
+                string storageName = System.IO.Path.ChangeExtension(storage.Name, ".zip");
+                string storagePath = System.IO.Path.Combine(restorePointPath, storageName);
                 var zipArc = new ZipArchive(File.Open(storagePath, FileMode.Create), ZipArchiveMode.Create);
                 zipArc.Dispose();
                 storage.JobObjects.ToList().ForEach(jobObject =>

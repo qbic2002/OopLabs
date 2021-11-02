@@ -8,10 +8,10 @@ namespace Backups.Entities
     public class BackupJob
     {
         private List<JobObject> _jobObjects;
-        private List<RestorePoint> _restorePoints = new ();
         private IAlgorithm _storageAlgorithm;
-        public BackupJob(IRepository repository, string name, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
+        public BackupJob(Backup backup, IRepository repository, string name, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {
+            Backup = backup ?? throw new BackupException("Incorrect backup");
             Repository = repository ?? throw new BackupException("Incorrect repository");
             Name = name ?? throw new BackupException("Incorrect name");
             if (jobObjects is null || jobObjects.Length == 0)
@@ -20,19 +20,18 @@ namespace Backups.Entities
             _storageAlgorithm = storageAlgorithm ?? throw new BackupException("Incorrect algorithm");
 
             JobObjects = new ReadOnlyCollection<JobObject>(_jobObjects);
-            RestorePoints = new ReadOnlyCollection<RestorePoint>(_restorePoints);
             CreateRestorePoint();
         }
 
         public string Name { get; }
         public IRepository Repository { get; }
         public ReadOnlyCollection<JobObject> JobObjects { get; }
-        public ReadOnlyCollection<RestorePoint> RestorePoints { get; }
+        public Backup Backup { get; }
 
         public RestorePoint CreateRestorePoint()
         {
-            var restorePoint = new RestorePoint(Repository, _restorePoints.Count + 1, _storageAlgorithm, _jobObjects.ToArray());
-            _restorePoints.Add(restorePoint);
+            var restorePoint = new RestorePoint(Repository, Backup.RestorePoints.Count + 1, _storageAlgorithm, _jobObjects.ToArray());
+            Backup.AddRestorePoint(restorePoint);
             restorePoint.AddRestorePointToRepository();
             restorePoint.CreateStorage();
             return restorePoint;

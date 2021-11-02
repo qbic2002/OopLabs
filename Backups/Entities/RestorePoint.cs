@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Backups.Tools;
 
 namespace Backups.Entities
@@ -24,11 +23,13 @@ namespace Backups.Entities
                 throw new BackupException("Incorrect objects");
             _jobObjects.AddRange(jobObjects);
             JobObjects = new ReadOnlyCollection<JobObject>(_jobObjects);
+            Storages = new ReadOnlyCollection<Storage>(_storages);
         }
 
         public DateTime DateTime { get; }
         public int Number { get; }
         public ReadOnlyCollection<JobObject> JobObjects { get; }
+        public ReadOnlyCollection<Storage> Storages { get; }
 
         public void CreateStorage()
         {

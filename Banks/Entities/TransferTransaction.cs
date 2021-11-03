@@ -2,11 +2,12 @@
 
 namespace Banks.Entities
 {
-    public class WithdrawTransaction : ITransaction
+    public class TransferTransaction : ITransaction
     {
-        public WithdrawTransaction(decimal credits, IBankAccount sender)
+        public TransferTransaction(decimal credits, IBankAccount sender, IBankAccount receiver)
         {
             Sender = sender ?? throw new BanksException("Incorrect sender");
+            Receiver = receiver ?? throw new BanksException("Incorrect receiver");
             if (credits <= 0)
                 throw new BanksException("Invalid transaction");
 
@@ -17,10 +18,10 @@ namespace Banks.Entities
         public decimal Credits { get; }
         public TransactionStatus Status { get; set; }
         public IBankAccount Sender { get; }
-        public IBankAccount Receiver { get; } = null;
+        public IBankAccount Receiver { get; }
         public ITransactionHandler Handler { get; set; } = null;
 
-        public TransactionType TransactionType => TransactionType.Withdraw;
+        public TransactionType TransactionType => TransactionType.Transfer;
 
         public void Cancel()
         {

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using Banks.Entities;
 using Banks.Tools;
 
@@ -16,9 +17,39 @@ namespace Banks.Services
             {
                 case TransactionType.Withdraw:
                     return new WithdrawTransaction(credits, sender);
+                case TransactionType.Put:
+                    return new PutTransaction(credits, sender);
+                case TransactionType.Transfer:
+                    return new TransferTransaction(credits, sender, receiver);
             }
 
             return null;
+        }
+
+        public static void FailTransaction(ITransaction transaction)
+        {
+            if (transaction is null)
+                throw new BanksException("Incorrect transaction");
+
+            transaction.Status = TransactionStatus.Fail;
+        }
+
+        public static void SuccessTransaction(ITransaction transaction)
+        {
+            if (transaction is null)
+                throw new BanksException("Incorrect transaction");
+
+            transaction.Status = TransactionStatus.Success;
+        }
+
+        public static void BecomeHandler(ITransactionHandler handler, ITransaction transaction)
+        {
+            if (transaction is null)
+                throw new BanksException("Incorrect transaction");
+            if (handler is null)
+                throw new BanksException("Incorrect handler");
+
+            transaction.Handler = handler;
         }
     }
 }

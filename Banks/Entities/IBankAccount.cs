@@ -2,10 +2,14 @@
 {
     public interface IBankAccount
     {
+        Client Client { get; }
+        BankAccountType BankAccountType { get; }
         decimal MinimalCredits { get; set; }
-        void PutCredits(decimal credits);
-        void WithdrawCredits(decimal credits);
-        void TransferCredits(decimal credits, IBankAccount receiver);
+        decimal Credits { get; }
+        ITransaction PutCredits(decimal credits);
+        ITransaction WithdrawCredits(decimal credits);
+        ITransaction TransferCredits(decimal credits, IBankAccount receiver);
         void ChargeInterest();
+        void CancelTransaction(ITransaction transaction);
     }
 }

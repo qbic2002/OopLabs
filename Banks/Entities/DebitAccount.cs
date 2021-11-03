@@ -7,39 +7,58 @@ namespace Banks.Entities
 {
     public class DebitAccount : IBankAccount
     {
-        private Bank _bank;
-
-        public DebitAccount(Bank bank, decimal minimalCredits)
+        public DebitAccount(Client client, decimal minimalCredits, BankAccountType bankAccountType)
         {
-            _bank = bank ?? throw new BanksException("Incorrect bank");
+            Client = client ?? throw new BanksException("Incorrect client");
             MinimalCredits = minimalCredits;
             Id = Guid.NewGuid();
+            BankAccountType = bankAccountType;
         }
 
         public Guid Id { get; }
         public decimal MinimalCredits { get; set; }
-        private decimal Credits => _bank.BankAccountAndCredits[this];
+        public BankAccountType BankAccountType { get; }
+        public decimal Credits => Client.Bank.BankAccountAndCredits[this];
+        public Client Client { get; }
 
-        public void WithdrawCredits(decimal credits)
+        public ITransaction WithdrawCredits(decimal credits)
         {
             if (credits <= 0)
                 throw new BanksException("Incorrect credits");
-            ITransaction withdraw = TransactionBuilder.CreateTransaction(TransactionType.Withdraw, credits, this);
+            ITransaction withdrawTransaction = TransactionBuilder.CreateTransaction(TransactionType.Withdraw, credits, this);
+            Client.Bank.HandleTransaction(withdrawTransaction);
+            return withdrawTransaction;
         }
 
-        public void PutCredits(decimal credits)
+        public ITransaction PutCredits(decimal credits)
         {
-            throw new System.NotImplementedException();
+            if (credits <= 0)
+                throw new BanksException("Incorrect credits");
+            ITransaction putTransaction = TransactionBuilder.CreateTransaction(TransactionType.Put, credits, this);
+            Client.Bank.HandleTransaction(putTransaction);
+            return putTransaction;
         }
 
-        public void TransferCredits(decimal credits, IBankAccount receiver)
+        public ITransaction TransferCredits(decimal credits, IBankAccount receiver)
         {
-            throw new System.NotImplementedException();
+            if (credits <= 0)
+                throw new BanksException("Incorrect credits");
+            ITransaction transferTransaction = TransactionBuilder.CreateTransaction(TransactionType.Transfer, credits, this, receiver);
+            Client.Bank.HandleTransaction(transferTransaction);
+            return transferTransaction;
         }
 
         public void ChargeInterest()
         {
             throw new System.NotImplementedException();
+        }
+
+        public void CancelTransaction(ITransaction transaction)
+        {
+            if (transaction is null)
+                throw new BanksException("Incorrect transaction");
+
+            transaction.Cancel();
         }
     }
 }

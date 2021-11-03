@@ -2,9 +2,9 @@
 
 namespace Banks.Entities
 {
-    public class WithdrawTransaction : ITransaction
+    public class PutTransaction : ITransaction
     {
-        public WithdrawTransaction(decimal credits, IBankAccount sender)
+        public PutTransaction(decimal credits, IBankAccount sender)
         {
             Sender = sender ?? throw new BanksException("Incorrect sender");
             if (credits <= 0)
@@ -20,7 +20,7 @@ namespace Banks.Entities
         public IBankAccount Receiver { get; } = null;
         public ITransactionHandler Handler { get; set; } = null;
 
-        public TransactionType TransactionType => TransactionType.Withdraw;
+        public TransactionType TransactionType => TransactionType.Put;
 
         public void Cancel()
         {

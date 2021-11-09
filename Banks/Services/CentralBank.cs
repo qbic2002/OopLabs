@@ -14,16 +14,40 @@ namespace Banks.Services
 
         public CentralBank()
         {
+            BankMethods = new BankMethods(this);
         }
+
+        public BankMethods BankMethods { get; }
 
         public Bank AddBank(string name)
         {
+            if (name is null)
+                throw new BanksException("Incorrect name");
+
             var random = new Random();
             int key = random.Next(int.MaxValue);
-            var bank = new Bank(key, name, this);
+            var bank = new Bank(key, this, name);
             _banks.Add(bank);
             _bankAndKey.Add(bank, key);
             return bank;
+        }
+
+        public IBankAccount FindBankAccountById(BankAccountId id)
+        {
+            Bank bankWithAccount = _banks.Find(bank => bank.ContainsBankAccount(id));
+            if (bankWithAccount is null)
+                throw new BanksException("Cannot find account");
+            return bankWithAccount.BankAccounts.Find(bankAccount => bankAccount.Id.Equals(id));
+        }
+
+        public void AddInterest()
+        {
+            _banks.ForEach(bank => bank.AddInterest());
+        }
+
+        public void ChargeInterest()
+        {
+            _banks.ForEach(bank => bank.ChargeInterest());
         }
 
         public void HandleTransaction(ITransaction transaction)
@@ -78,6 +102,12 @@ namespace Banks.Services
                     throw new BanksException("Too low credits on account");
                 }
 
+                if (transaction.Sender.IsDoubtful && transaction.Credits > senderBank.DoubtfulLimit)
+                {
+                    TransactionBuilder.FailTransaction(transaction);
+                    throw new BanksException("Over the doubtful limit");
+                }
+
                 senderBank.ChangeCredits(_bankAndKey[senderBank], transaction.Sender, transaction.Sender.Credits - transaction.Credits);
                 receiverBank.ChangeCredits(_bankAndKey[receiverBank], transaction.Receiver, transaction.Receiver.Credits + transaction.Credits);
                 TransactionBuilder.SuccessTransaction(transaction);
@@ -86,12 +116,18 @@ namespace Banks.Services
 
         public void CancelTransaction(ITransaction transaction)
         {
+            if (transaction is null)
+                throw new BanksException("Incorrect transaction");
+            if (transaction.Status == TransactionStatus.Pending)
+                transaction.Status = TransactionStatus.Cancel;
+            if (transaction.Status == TransactionStatus.Fail || transaction.Status == TransactionStatus.Cancel)
+                throw new BanksException("Transaction cannot be cancelled");
+
             if (transaction.TransactionType != TransactionType.Transfer)
             {
                 Bank bank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
                 if (bank is null)
                 {
-                    TransactionBuilder.FailTransaction(transaction);
                     throw new BanksException("Incorrect transaction");
                 }
 

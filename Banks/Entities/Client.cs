@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Banks.Services;
 using Banks.Tools;
 
@@ -37,8 +38,29 @@ namespace Banks.Entities
         public string FirstName { get; }
         public string LastName { get; }
         public string Address { get; private set; }
-        public int Passport { get; private set; }
+        public int Passport { get; private set; } = -1;
+        public bool IsDoubtful => Address is null || Passport == -1;
         public List<IBankAccount> BankAccounts => Bank.ClientsAndAccounts[this];
+        public bool IsReceiveNotifications { get; private set; } = true;
+        public ReadOnlyCollection<ITransaction> Transactions
+        {
+            get
+            {
+                var transactions = new List<ITransaction>();
+                BankAccounts.ForEach(bankAccount => transactions.AddRange(bankAccount.Transactions));
+                return new ReadOnlyCollection<ITransaction>(transactions);
+            }
+        }
+
+        public ReadOnlyCollection<INotification> Notifications
+        {
+            get
+            {
+                var notifications = new List<INotification>();
+                BankAccounts.ForEach(bankAccount => notifications.AddRange(bankAccount.Notifications));
+                return new ReadOnlyCollection<INotification>(notifications);
+            }
+        }
 
         public void SetAddress(string address)
         {
@@ -51,11 +73,16 @@ namespace Banks.Entities
         {
             if (Passport > 0)
                 throw new BanksException("Passport already set");
-            if (passport < 0)
+            if (passport <= 0)
                 throw new BanksException("Incorrect passport");
             Passport = passport;
         }
 
-        public IBankAccount CreateBankAccount(BankAccountType bankAccountType) => Bank.CreateBankAccount(this, bankAccountType);
+        public void ReceiveNotification(bool isReceive)
+        {
+            IsReceiveNotifications = isReceive;
+        }
+
+        public IBankAccount CreateBankAccount(BankAccountType bankAccountType, decimal startMoney = 0, int term = 365) => Bank.CreateBankAccount(this, bankAccountType, startMoney, term);
     }
 }

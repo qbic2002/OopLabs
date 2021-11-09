@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading;
 using Banks.Services;
 using Banks.Tools;
 
@@ -10,11 +12,14 @@ namespace Banks.Entities
     {
         private Dictionary<IBankAccount, decimal> _bankAccountAndCredits = new ();
         private Dictionary<Client, List<IBankAccount>> _clientAndAccounts = new ();
-        private List<Client> _clients = new ();
-        private List<IBankAccount> _bankAccounts = new ();
+        private Dictionary<DepositAccount, int> _depositAccountAndTerm = new ();
+        private decimal _creditLowLimit = -100000M;
         private int _key;
+        private decimal _debitPercent = 0.02M;
+        private decimal _creditCommission = 0.02M;
+        private IDepositPercentStrategy _depositPercentStrategy = new DefaultDepositPercentStrategy();
 
-        public Bank(int key, string name, CentralBank centralBank)
+        public Bank(int key, CentralBank centralBank, string name)
         {
             Name = name ?? throw new BanksException("Incorrect name");
             CentralBank = centralBank ?? throw new BanksException("Incorrect central bank");
@@ -26,8 +31,63 @@ namespace Banks.Entities
 
         public string Name { get; }
         public CentralBank CentralBank { get; }
+        public decimal DoubtfulLimit { get; private set; } = 5000;
         public ReadOnlyDictionary<IBankAccount, decimal> BankAccountAndCredits { get; }
         public ReadOnlyDictionary<Client, List<IBankAccount>> ClientsAndAccounts { get; }
+        public List<IBankAccount> BankAccounts => _bankAccountAndCredits.Keys.ToList();
+        private List<Client> Clients => _clientAndAccounts.Keys.ToList();
+
+        public void SetPercents(IDepositPercentStrategy depositPercentStrategy, decimal debitPercent = 0.2M, decimal creditCommission = 0.2M)
+        {
+            if (creditCommission < 0)
+                throw new BanksException("Incorrect credit commission");
+            if (debitPercent < 0)
+                throw new BanksException("Incorrect debit percent");
+
+            if (_creditCommission != creditCommission)
+            {
+                BankAccounts.ForEach(bankAccount =>
+                {
+                    if (bankAccount is CreditAccount creditAccount)
+                    {
+                        bankAccount.Percent = _creditCommission;
+                        if (bankAccount.Client.IsReceiveNotifications)
+                            creditAccount.HandleNotification(new PercentNotification(creditAccount, _creditCommission, creditCommission));
+                    }
+                });
+            }
+
+            if (_debitPercent != debitPercent)
+            {
+                BankAccounts.ForEach(bankAccount =>
+                {
+                    if (bankAccount is DebitAccount debitAccount)
+                    {
+                        bankAccount.Percent = debitPercent;
+                        if (bankAccount.Client.IsReceiveNotifications)
+                            debitAccount.HandleNotification(new PercentNotification(debitAccount, _debitPercent, debitPercent));
+                    }
+                });
+            }
+
+            _depositPercentStrategy = depositPercentStrategy ?? throw new BanksException("Incorrect strategy");
+            _creditCommission = creditCommission;
+            _debitPercent = debitPercent;
+        }
+
+        public void SetDoubtfulLimit(decimal doubtfulLimit)
+        {
+            if (doubtfulLimit < 0)
+                throw new BanksException("Incorrect doubtful limit");
+            DoubtfulLimit = doubtfulLimit;
+        }
+
+        public void SetCreditLowLimit(decimal creditLowLimit)
+        {
+            if (creditLowLimit >= 0)
+                throw new BanksException("Incorrect low limit");
+            _creditLowLimit = creditLowLimit;
+        }
 
         public void ChangeCredits(int key, IBankAccount bankAccount, decimal newCredits)
         {
@@ -36,198 +96,28 @@ namespace Banks.Entities
             _bankAccountAndCredits[bankAccount] = newCredits;
         }
 
-        public Client AddClient(string firstName, string lastName)
-        {
-            var client = new Client(this, firstName, lastName);
-            _clients.Add(client);
-            _clientAndAccounts.Add(client, new List<IBankAccount>());
-            return client;
-        }
+        public Client AddClient(string firstName, string lastName) =>
+            CentralBank.BankMethods.AddClient(firstName, lastName, this, _clientAndAccounts);
 
-        public IBankAccount CreateBankAccount(Client client, BankAccountType bankAccountType)
-        {
-            if (client is null)
-                throw new BanksException("Incorrect client");
-            if (!ContainsClient(client))
-                throw new BanksException("Client not in this bank");
+        public void AddInterest() => CentralBank.BankMethods.AddInterest(BankAccounts, _bankAccountAndCredits);
+        public void ChargeInterest() => CentralBank.BankMethods.ChargeInterest(BankAccounts);
 
-            IBankAccount bankAccount = null;
-            switch (bankAccountType)
-            {
-                case BankAccountType.Debit:
-                    bankAccount = new DebitAccount(client, 0, BankAccountType.Debit);
-                    _bankAccountAndCredits.Add(bankAccount, 0);
-                    break;
-            }
+        public IBankAccount CreateBankAccount(Client client, BankAccountType bankAccountType, decimal startMoney = 0, int term = 365) =>
+            CentralBank.BankMethods.CreateBankAccount(client, bankAccountType, _debitPercent, _creditLowLimit, _creditCommission, _bankAccountAndCredits, _depositAccountAndTerm, _clientAndAccounts, Clients, _depositPercentStrategy, startMoney, term);
 
-            if (!_clientAndAccounts.ContainsKey(client))
-                _clientAndAccounts.Add(client, new List<IBankAccount>());
+        public bool IsTermExpired(DepositAccount depositAccount) =>
+            CentralBank.BankMethods.IsTermExpired(depositAccount, _depositAccountAndTerm);
 
-            _clientAndAccounts[client].Add(bankAccount);
+        public void HandleTransaction(ITransaction transaction) =>
+            CentralBank.BankMethods.HandleTransaction(transaction, this, _bankAccountAndCredits);
 
-            _bankAccounts.Add(bankAccount);
-            return bankAccount;
-        }
+        public void CancelTransaction(ITransaction transaction) =>
+            CentralBank.BankMethods.CancelTransaction(transaction, _bankAccountAndCredits);
+        public bool ContainsClient(Client client) => CentralBank.BankMethods.ContainsClient(client, Clients);
+        public bool ContainsBankAccount(IBankAccount bankAccount) => CentralBank.BankMethods.ContainsBankAccount(bankAccount, BankAccounts);
+        public bool ContainsBankAccount(BankAccountId id) => CentralBank.BankMethods.ContainsBankAccount(id, BankAccounts);
 
-        public void HandleTransaction(ITransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (transaction.Status != TransactionStatus.Pending)
-                throw new BanksException("Not pending transaction");
-            TransactionBuilder.BecomeHandler(this, transaction);
-
-            switch (transaction.TransactionType)
-            {
-                case TransactionType.Withdraw:
-                    WithdrawTransactionHandler(transaction as WithdrawTransaction);
-                    break;
-                case TransactionType.Put:
-                    PutTransactionHandler(transaction as PutTransaction);
-                    break;
-                case TransactionType.Transfer:
-                    TransferTransactionHandler(transaction as TransferTransaction);
-                    break;
-            }
-        }
-
-        public void CancelTransaction(ITransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (transaction.Status == TransactionStatus.Pending)
-                transaction.Status = TransactionStatus.Cancel;
-            if (transaction.Status == TransactionStatus.Fail || transaction.Status == TransactionStatus.Cancel)
-                throw new BanksException("Transaction cannot be cancelled");
-
-            switch (transaction.TransactionType)
-            {
-                case TransactionType.Withdraw:
-                    CancelWithdraw(transaction as WithdrawTransaction);
-                    break;
-                case TransactionType.Put:
-                    CancelPut(transaction as PutTransaction);
-                    break;
-                case TransactionType.Transfer:
-                    CancelTransfer(transaction as TransferTransaction);
-                    break;
-            }
-        }
-
-        public bool ContainsClient(Client client) => _clients.Contains(client);
-        public bool ContainsBankAccount(IBankAccount bankAccount) => _bankAccounts.Contains(bankAccount);
-
-        private void WithdrawTransactionHandler(WithdrawTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-            {
-                TransactionBuilder.FailTransaction(transaction);
-                throw new BanksException("Cannot find info about sender");
-            }
-
-            decimal accountCredits = transaction.Sender.Credits;
-            decimal minimalCreditsOnAccount = transaction.Sender.MinimalCredits;
-            if (accountCredits - transaction.Credits < minimalCreditsOnAccount)
-            {
-                TransactionBuilder.FailTransaction(transaction);
-                throw new BanksException("Too low credits on account");
-            }
-
-            _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
-            TransactionBuilder.SuccessTransaction(transaction);
-        }
-
-        private void PutTransactionHandler(PutTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-            {
-                TransactionBuilder.FailTransaction(transaction);
-                throw new BanksException("Cannot find info about sender");
-            }
-
-            _bankAccountAndCredits[transaction.Sender] += transaction.Credits;
-            TransactionBuilder.SuccessTransaction(transaction);
-        }
-
-        private void TransferTransactionHandler(TransferTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-            {
-                TransactionBuilder.FailTransaction(transaction);
-                throw new BanksException("Cannot find info about sender");
-            }
-
-            if (!ContainsBankAccount(transaction.Receiver))
-            {
-                CentralBank.HandleTransaction(transaction);
-            }
-            else
-            {
-                decimal accountCredits = transaction.Sender.Credits;
-                decimal minimalCreditsOnAccount = transaction.Sender.MinimalCredits;
-                if (accountCredits - transaction.Credits < minimalCreditsOnAccount)
-                {
-                    TransactionBuilder.FailTransaction(transaction);
-                    throw new BanksException("Too low credits on account");
-                }
-
-                if (!_bankAccountAndCredits.ContainsKey(transaction.Receiver))
-                {
-                    TransactionBuilder.FailTransaction(transaction);
-                    throw new BanksException("Cannot find info about receiver");
-                }
-
-                _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
-                _bankAccountAndCredits[transaction.Receiver] += transaction.Credits;
-                TransactionBuilder.SuccessTransaction(transaction);
-            }
-        }
-
-        private void CancelWithdraw(WithdrawTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-                throw new BanksException("Cannot find info about sender");
-
-            _bankAccountAndCredits[transaction.Sender] += transaction.Credits;
-            transaction.Status = TransactionStatus.Cancel;
-        }
-
-        private void CancelPut(PutTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-                throw new BanksException("Cannot find info about sender");
-
-            decimal accountCredits = transaction.Sender.Credits;
-            decimal minimalCreditsOnAccount = transaction.Sender.MinimalCredits;
-            if (accountCredits - transaction.Credits < minimalCreditsOnAccount)
-                throw new BanksException("Too low credits on account");
-
-            _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
-            transaction.Status = TransactionStatus.Cancel;
-        }
-
-        private void CancelTransfer(TransferTransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
-                throw new BanksException("Cannot find info about sender");
-            if (!_bankAccountAndCredits.ContainsKey(transaction.Receiver))
-                throw new BanksException("Cannot find info about receiver");
-
-            _bankAccountAndCredits[transaction.Sender] += transaction.Credits;
-            _bankAccountAndCredits[transaction.Receiver] -= transaction.Credits;
-            transaction.Status = TransactionStatus.Cancel;
-        }
+        private decimal CalculateDepositPercent(decimal startDeposit) =>
+            CentralBank.BankMethods.CalculateDepositPercent(startDeposit, _depositPercentStrategy);
     }
 }

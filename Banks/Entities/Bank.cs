@@ -79,6 +79,9 @@ namespace Banks.Entities
         {
             if (doubtfulLimit < 0)
                 throw new BanksException("Incorrect doubtful limit");
+
+            if (doubtfulLimit != DoubtfulLimit)
+                BankAccounts.ForEach(bankAccount => bankAccount.HandleNotification(new LimitNotification(bankAccount, DoubtfulLimit, doubtfulLimit)));
             DoubtfulLimit = doubtfulLimit;
         }
 

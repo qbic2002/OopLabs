@@ -51,9 +51,10 @@ namespace Banks
             testClient1.ReceiveNotification(false);
             bank1.SetPercents(new DefaultDepositPercentStrategy(), 0.1M);
             bank2.SetPercents(new DefaultDepositPercentStrategy(), 0.01M);
+            bank2.SetDoubtfulLimit(10000);
 
             Console.WriteLine(testClient1.Notifications.FirstOrDefault());
-            Console.WriteLine(testClient2.Notifications.FirstOrDefault());
+            testClient2.Notifications.ToList().ForEach(Console.WriteLine);
 
             bankAccount2.WithdrawCredits(2);
 

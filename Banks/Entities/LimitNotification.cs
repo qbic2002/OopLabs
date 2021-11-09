@@ -1,12 +1,12 @@
 ﻿namespace Banks.Entities
 {
-    public class LimitNotification
+    public class LimitNotification : INotification
     {
-        public LimitNotification(IBankAccount bankAccount, decimal oldPercent, decimal newPercent)
+        public LimitNotification(IBankAccount bankAccount, decimal oldLimit, decimal newLimit)
         {
             BankAccount = bankAccount;
-            OldValue = oldPercent;
-            NewValue = newPercent;
+            OldValue = oldLimit;
+            NewValue = newLimit;
         }
 
         public IBankAccount BankAccount { get; }
@@ -15,7 +15,7 @@
 
         public override string ToString()
         {
-            return $"Account: {BankAccount.Id}; Old doubtful limit: {OldValue}; New doubtful limit: {NewValue}";
+            return $"Account: {BankAccount.Id.Id}; Old doubtful limit: {OldValue}; New doubtful limit: {NewValue}";
         }
     }
 }

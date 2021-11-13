@@ -22,6 +22,7 @@ namespace Banks.UI
                 Console.WriteLine("2 - Charge interest");
                 Console.WriteLine("3 - Add Interest");
                 Console.WriteLine("4 - Show Banks");
+                Console.WriteLine("5 - Go to time manager");
                 if (WaitForAction())
                     break;
             }
@@ -62,10 +63,13 @@ namespace Banks.UI
                 case 4:
                     ShowBanks();
                     break;
+                case 5:
+                    var timeManagerUI = new TimeManagerUI(_centralBank.TimeManager);
+                    timeManagerUI.WriteDescription();
+                    break;
                 case 0:
                     return true;
                 default:
-                    WriteDescription();
                     break;
             }
 

@@ -15,6 +15,7 @@ namespace Banks.Services
         }
 
         public BankMethods BankMethods { get; }
+        public TimeManager TimeManager { get; set; }
         public List<Bank> Banks { get; } = new List<Bank>();
 
         public Bank AddBank(string name)
@@ -51,6 +52,7 @@ namespace Banks.Services
         public void AddOneDay()
         {
             Banks.ForEach(bank => bank.AddOneDay());
+            ChargeInterest();
         }
 
         public void HandleTransaction(ITransaction transaction)

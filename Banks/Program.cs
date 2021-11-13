@@ -8,7 +8,9 @@ namespace Banks
     {
         private static void Main()
         {
-            var ui = new CentralBankUI(new CentralBank());
+            var centralBank = new CentralBank();
+            var timeManager = new TimeManager(centralBank);
+            var ui = new CentralBankUI(centralBank);
             while (true)
             {
                 try

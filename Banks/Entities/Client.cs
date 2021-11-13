@@ -36,8 +36,8 @@ namespace Banks.Entities
         public string FirstName { get; }
         public string LastName { get; }
         public string Address { get; private set; }
-        public int Passport { get; private set; } = -1;
-        public bool IsDoubtful => Address is null || Passport == -1;
+        public Passport Passport { get; private set; } = null;
+        public bool IsDoubtful => Address is null || Passport is null;
         public List<IBankAccount> BankAccounts => Bank.ClientsAndAccounts[this];
         public bool IsReceiveNotifications { get; private set; } = true;
         public ReadOnlyCollection<ITransaction> Transactions
@@ -62,17 +62,12 @@ namespace Banks.Entities
 
         public void SetAddress(string address)
         {
-            if (Address is not null)
-                throw new BanksException("Address already set");
             Address = address ?? throw new BanksException("Incorrect Address");
         }
 
-        public void SetPassport(int passport)
+        public void SetPassport(int passportNumber)
         {
-            if (Passport > 0)
-                throw new BanksException("Passport already set");
-            if (passport <= 0)
-                throw new BanksException("Incorrect passport");
+            var passport = new Passport(passportNumber);
             Passport = passport;
         }
 

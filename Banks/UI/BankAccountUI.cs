@@ -19,7 +19,7 @@ namespace Banks.UI
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine($"{_bankAccount.BankAccountType} ACCOUNT {_bankAccount.Id} MENU. Credits: {_bankAccount.Credits}");
+                Console.WriteLine($"{_bankAccount.BankAccountType} ACCOUNT {_bankAccount.Id} MENU. Credits: {_bankAccount.Credits:0.00}");
                 Console.WriteLine("1 - Put credits");
                 Console.WriteLine("2 - Withdraw credits");
                 Console.WriteLine("3 - Transfer credits");
@@ -153,7 +153,7 @@ namespace Banks.UI
             Console.WriteLine($"Type: {_bankAccount.BankAccountType}");
             Console.WriteLine($"Id: {_bankAccount.Id}");
             Console.WriteLine($"Client: {_bankAccount.Client}");
-            Console.WriteLine($"Credits {_bankAccount.Credits}");
+            Console.WriteLine($"Credits {_bankAccount.Credits:0.00}");
             Console.WriteLine($"Minimal credits {_bankAccount.MinimalCredits}");
             Console.WriteLine($"{(_bankAccount is CreditAccount ? new string("Commission") : new string("Percent"))} {_bankAccount.Percent}");
             Console.WriteLine($"Days opened: {_bankAccount.DaysOpened}");

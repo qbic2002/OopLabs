@@ -40,7 +40,7 @@ namespace Banks.Entities
 
         public override string ToString()
         {
-            return new string($"ID: {Id}; Type: {BankAccountType}; Credits: {Credits}");
+            return new string($"ID: {Id}; Type: {BankAccountType}; Credits: {Credits:0.00}");
         }
 
         public ITransaction WithdrawCredits(decimal credits)

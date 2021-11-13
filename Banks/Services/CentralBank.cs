@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using Banks.Entities;
 using Banks.Tools;
 
@@ -9,7 +7,6 @@ namespace Banks.Services
 {
     public class CentralBank : ITransactionHandler
     {
-        private List<Bank> _banks = new ();
         private Dictionary<Bank, int> _bankAndKey = new ();
 
         public CentralBank()
@@ -18,6 +15,7 @@ namespace Banks.Services
         }
 
         public BankMethods BankMethods { get; }
+        public List<Bank> Banks { get; } = new List<Bank>();
 
         public Bank AddBank(string name)
         {
@@ -27,14 +25,14 @@ namespace Banks.Services
             var random = new Random();
             int key = random.Next(int.MaxValue);
             var bank = new Bank(key, this, name);
-            _banks.Add(bank);
+            Banks.Add(bank);
             _bankAndKey.Add(bank, key);
             return bank;
         }
 
         public IBankAccount FindBankAccountById(BankAccountId id)
         {
-            Bank bankWithAccount = _banks.Find(bank => bank.ContainsBankAccount(id));
+            Bank bankWithAccount = Banks.Find(bank => bank.ContainsBankAccount(id));
             if (bankWithAccount is null)
                 throw new BanksException("Cannot find account");
             return bankWithAccount.BankAccounts.Find(bankAccount => bankAccount.Id.Equals(id));
@@ -42,12 +40,17 @@ namespace Banks.Services
 
         public void AddInterest()
         {
-            _banks.ForEach(bank => bank.AddInterest());
+            Banks.ForEach(bank => bank.AddInterest());
         }
 
         public void ChargeInterest()
         {
-            _banks.ForEach(bank => bank.ChargeInterest());
+            Banks.ForEach(bank => bank.ChargeInterest());
+        }
+
+        public void AddOneDay()
+        {
+            Banks.ForEach(bank => bank.AddOneDay());
         }
 
         public void HandleTransaction(ITransaction transaction)
@@ -57,7 +60,7 @@ namespace Banks.Services
             TransactionBuilder.BecomeHandler(this, transaction);
             if (transaction.TransactionType != TransactionType.Transfer)
             {
-                Bank bank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
+                Bank bank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
                 if (bank is null)
                 {
                     TransactionBuilder.FailTransaction(transaction);
@@ -68,8 +71,8 @@ namespace Banks.Services
             }
             else
             {
-                Bank senderBank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
-                Bank receiverBank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
+                Bank senderBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
+                Bank receiverBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
                 if (senderBank is null)
                 {
                     TransactionBuilder.FailTransaction(transaction);
@@ -125,7 +128,7 @@ namespace Banks.Services
 
             if (transaction.TransactionType != TransactionType.Transfer)
             {
-                Bank bank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
+                Bank bank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
                 if (bank is null)
                 {
                     throw new BanksException("Incorrect transaction");
@@ -135,8 +138,8 @@ namespace Banks.Services
             }
             else
             {
-                Bank senderBank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
-                Bank receiverBank = _banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
+                Bank senderBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
+                Bank receiverBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
                 if (senderBank is null)
                 {
                     throw new BanksException("Incorrect sender");

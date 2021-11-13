@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using Banks.Services;
 using Banks.Tools;
 
@@ -13,11 +11,7 @@ namespace Banks.Entities
         private Dictionary<IBankAccount, decimal> _bankAccountAndCredits = new ();
         private Dictionary<Client, List<IBankAccount>> _clientAndAccounts = new ();
         private Dictionary<DepositAccount, int> _depositAccountAndTerm = new ();
-        private decimal _creditLowLimit = -100000M;
         private int _key;
-        private decimal _debitPercent = 0.02M;
-        private decimal _creditCommission = 0.02M;
-        private IDepositPercentStrategy _depositPercentStrategy = new DefaultDepositPercentStrategy();
 
         public Bank(int key, CentralBank centralBank, string name)
         {
@@ -27,37 +21,43 @@ namespace Banks.Entities
 
             BankAccountAndCredits = new ReadOnlyDictionary<IBankAccount, decimal>(_bankAccountAndCredits);
             ClientsAndAccounts = new ReadOnlyDictionary<Client, List<IBankAccount>>(_clientAndAccounts);
+            DepositAccountAndTerm = new ReadOnlyDictionary<DepositAccount, int>(_depositAccountAndTerm);
         }
 
         public string Name { get; }
         public CentralBank CentralBank { get; }
+        public decimal DebitPercent { get; private set; } = 0.02M;
+        public decimal CreditCommission { get; private set; } = 0.02M;
+        public IDepositPercent DepositPercentStrategy { get; private set; } = new DepositPercent();
+        public decimal CreditLowLimit { get; private set; } = -100000M;
         public decimal DoubtfulLimit { get; private set; } = 5000;
         public ReadOnlyDictionary<IBankAccount, decimal> BankAccountAndCredits { get; }
         public ReadOnlyDictionary<Client, List<IBankAccount>> ClientsAndAccounts { get; }
         public List<IBankAccount> BankAccounts => _bankAccountAndCredits.Keys.ToList();
-        private List<Client> Clients => _clientAndAccounts.Keys.ToList();
+        public List<Client> Clients => _clientAndAccounts.Keys.ToList();
+        public ReadOnlyDictionary<DepositAccount, int> DepositAccountAndTerm { get; }
 
-        public void SetPercents(IDepositPercentStrategy depositPercentStrategy, decimal debitPercent = 0.2M, decimal creditCommission = 0.2M)
+        public void SetPercents(IDepositPercent depositPercentStrategy, decimal debitPercent = 0.2M, decimal creditCommission = 0.2M)
         {
             if (creditCommission < 0)
                 throw new BanksException("Incorrect credit commission");
             if (debitPercent < 0)
                 throw new BanksException("Incorrect debit percent");
 
-            if (_creditCommission != creditCommission)
+            if (CreditCommission != creditCommission)
             {
                 BankAccounts.ForEach(bankAccount =>
                 {
                     if (bankAccount is CreditAccount creditAccount)
                     {
-                        bankAccount.Percent = _creditCommission;
+                        bankAccount.Percent = CreditCommission;
                         if (bankAccount.Client.IsReceiveNotifications)
-                            creditAccount.HandleNotification(new PercentNotification(creditAccount, _creditCommission, creditCommission));
+                            creditAccount.HandleNotification(new PercentNotification(creditAccount, CreditCommission, creditCommission));
                     }
                 });
             }
 
-            if (_debitPercent != debitPercent)
+            if (DebitPercent != debitPercent)
             {
                 BankAccounts.ForEach(bankAccount =>
                 {
@@ -65,14 +65,14 @@ namespace Banks.Entities
                     {
                         bankAccount.Percent = debitPercent;
                         if (bankAccount.Client.IsReceiveNotifications)
-                            debitAccount.HandleNotification(new PercentNotification(debitAccount, _debitPercent, debitPercent));
+                            debitAccount.HandleNotification(new PercentNotification(debitAccount, DebitPercent, debitPercent));
                     }
                 });
             }
 
-            _depositPercentStrategy = depositPercentStrategy ?? throw new BanksException("Incorrect strategy");
-            _creditCommission = creditCommission;
-            _debitPercent = debitPercent;
+            DepositPercentStrategy = depositPercentStrategy ?? throw new BanksException("Incorrect strategy");
+            CreditCommission = creditCommission;
+            DebitPercent = debitPercent;
         }
 
         public void SetDoubtfulLimit(decimal doubtfulLimit)
@@ -81,7 +81,7 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect doubtful limit");
 
             if (doubtfulLimit != DoubtfulLimit)
-                BankAccounts.ForEach(bankAccount => bankAccount.HandleNotification(new LimitNotification(bankAccount, DoubtfulLimit, doubtfulLimit)));
+               BankAccounts.Where(bankAccount => bankAccount.Client.IsDoubtful).ToList().ForEach(bankAccount => bankAccount.HandleNotification(new LimitNotification(bankAccount, DoubtfulLimit, doubtfulLimit)));
             DoubtfulLimit = doubtfulLimit;
         }
 
@@ -89,7 +89,7 @@ namespace Banks.Entities
         {
             if (creditLowLimit >= 0)
                 throw new BanksException("Incorrect low limit");
-            _creditLowLimit = creditLowLimit;
+            CreditLowLimit = creditLowLimit;
         }
 
         public void ChangeCredits(int key, IBankAccount bankAccount, decimal newCredits)
@@ -104,9 +104,10 @@ namespace Banks.Entities
 
         public void AddInterest() => CentralBank.BankMethods.AddInterest(BankAccounts, _bankAccountAndCredits);
         public void ChargeInterest() => CentralBank.BankMethods.ChargeInterest(BankAccounts);
+        public void AddOneDay() => CentralBank.BankMethods.AddOneDay(BankAccounts);
 
         public IBankAccount CreateBankAccount(Client client, BankAccountType bankAccountType, decimal startMoney = 0, int term = 365) =>
-            CentralBank.BankMethods.CreateBankAccount(client, bankAccountType, _debitPercent, _creditLowLimit, _creditCommission, _bankAccountAndCredits, _depositAccountAndTerm, _clientAndAccounts, Clients, _depositPercentStrategy, startMoney, term);
+            CentralBank.BankMethods.CreateBankAccount(client, bankAccountType, DebitPercent, CreditLowLimit, CreditCommission, _bankAccountAndCredits, _depositAccountAndTerm, _clientAndAccounts, Clients, DepositPercentStrategy, startMoney, term);
 
         public bool IsTermExpired(DepositAccount depositAccount) =>
             CentralBank.BankMethods.IsTermExpired(depositAccount, _depositAccountAndTerm);
@@ -119,8 +120,12 @@ namespace Banks.Entities
         public bool ContainsClient(Client client) => CentralBank.BankMethods.ContainsClient(client, Clients);
         public bool ContainsBankAccount(IBankAccount bankAccount) => CentralBank.BankMethods.ContainsBankAccount(bankAccount, BankAccounts);
         public bool ContainsBankAccount(BankAccountId id) => CentralBank.BankMethods.ContainsBankAccount(id, BankAccounts);
+        public override string ToString()
+        {
+            return new string($"{Name}");
+        }
 
         private decimal CalculateDepositPercent(decimal startDeposit) =>
-            CentralBank.BankMethods.CalculateDepositPercent(startDeposit, _depositPercentStrategy);
+            CentralBank.BankMethods.CalculateDepositPercent(startDeposit, DepositPercentStrategy);
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 namespace Banks.Entities
 {
@@ -25,5 +23,6 @@ namespace Banks.Entities
         decimal AddInterest();
         void HandleNotification(INotification notification);
         void AddOneDay();
+        string ToString();
     }
 }

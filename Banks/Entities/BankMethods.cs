@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using Banks.Services;
 using Banks.Tools;
 
@@ -13,6 +12,11 @@ namespace Banks.Entities
         public BankMethods(CentralBank centralBank)
         {
             _centralBank = centralBank ?? throw new BanksException("Incorrect central bank");
+        }
+
+        public void AddOneDay(List<IBankAccount> bankAccounts)
+        {
+            bankAccounts.ForEach(bankAccount => bankAccount.AddOneDay());
         }
 
         public Client AddClient(string firstName, string lastName, Bank bank, Dictionary<Client, List<IBankAccount>> clientAndAccounts)
@@ -38,10 +42,10 @@ namespace Banks.Entities
         public bool ContainsBankAccount(BankAccountId id, List<IBankAccount> bankAccounts) =>
             bankAccounts.Exists(bankAccount => bankAccount.Id.Equals(id));
 
-        public decimal CalculateDepositPercent(decimal startDeposit, IDepositPercentStrategy depositPercentStrategy) =>
+        public decimal CalculateDepositPercent(decimal startDeposit, IDepositPercent depositPercentStrategy) =>
             depositPercentStrategy.Calculate(startDeposit);
 
-        public IBankAccount CreateBankAccount(Client client, BankAccountType bankAccountType, decimal debitPercent, decimal creditLowLimit, decimal creditCommission, Dictionary<IBankAccount, decimal> bankAccountAndCredits, Dictionary<DepositAccount, int> depositAccountAndTerm, Dictionary<Client, List<IBankAccount>> clientAndAccounts, List<Client> clients, IDepositPercentStrategy depositPercentStrategy = null, decimal startMoney = 0, int term = 0)
+        public IBankAccount CreateBankAccount(Client client, BankAccountType bankAccountType, decimal debitPercent, decimal creditLowLimit, decimal creditCommission, Dictionary<IBankAccount, decimal> bankAccountAndCredits, Dictionary<DepositAccount, int> depositAccountAndTerm, Dictionary<Client, List<IBankAccount>> clientAndAccounts, List<Client> clients, IDepositPercent depositPercentStrategy = null, decimal startMoney = 0, int term = 0)
         {
             if (client is null)
                 throw new BanksException("Incorrect client");

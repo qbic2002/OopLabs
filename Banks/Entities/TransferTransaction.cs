@@ -27,5 +27,10 @@ namespace Banks.Entities
         {
             Handler.CancelTransaction(this);
         }
+
+        public override string ToString()
+        {
+            return new string($"Sender: {Sender.Id}; Receiver: {Receiver.Id}; Credits {Credits}; Type: {TransactionType}; Status: {Status}");
+        }
     }
 }

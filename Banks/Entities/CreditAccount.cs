@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Banks.Services;
 using Banks.Tools;
@@ -38,6 +37,11 @@ namespace Banks.Entities
         public BankAccountType BankAccountType { get; }
         public decimal MinimalCredits { get; set; }
         public decimal Credits => Client.Bank.BankAccountAndCredits[this];
+
+        public override string ToString()
+        {
+            return new string($"ID: {Id}; Type: {BankAccountType}; Credits: {Credits}");
+        }
 
         public ITransaction WithdrawCredits(decimal credits)
         {

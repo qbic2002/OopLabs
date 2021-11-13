@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Banks.Services;
 using Banks.Tools;
 
 namespace Banks.Entities
@@ -84,5 +82,9 @@ namespace Banks.Entities
         }
 
         public IBankAccount CreateBankAccount(BankAccountType bankAccountType, decimal startMoney = 0, int term = 365) => Bank.CreateBankAccount(this, bankAccountType, startMoney, term);
+        public override string ToString()
+        {
+            return new string($"{FirstName} {LastName}");
+        }
     }
 }

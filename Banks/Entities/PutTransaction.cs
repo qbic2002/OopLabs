@@ -7,6 +7,7 @@ namespace Banks.Entities
         public PutTransaction(decimal credits, IBankAccount sender)
         {
             Sender = sender ?? throw new BanksException("Incorrect sender");
+            Receiver = sender;
             if (credits <= 0)
                 throw new BanksException("Invalid transaction");
 
@@ -17,7 +18,7 @@ namespace Banks.Entities
         public decimal Credits { get; }
         public TransactionStatus Status { get; set; }
         public IBankAccount Sender { get; }
-        public IBankAccount Receiver { get; } = null;
+        public IBankAccount Receiver { get; }
         public ITransactionHandler Handler { get; set; } = null;
 
         public TransactionType TransactionType => TransactionType.Put;
@@ -25,6 +26,11 @@ namespace Banks.Entities
         public void Cancel()
         {
             Handler.CancelTransaction(this);
+        }
+
+        public override string ToString()
+        {
+            return new string($"Sender: {Sender.Id}; Receiver: {Receiver.Id}; Credits {Credits}; Type: {TransactionType}; Status: {Status}");
         }
     }
 }

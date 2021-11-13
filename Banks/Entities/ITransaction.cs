@@ -9,5 +9,6 @@
         TransactionType TransactionType { get; }
         TransactionStatus Status { get; set; }
         void Cancel();
+        string ToString();
     }
 }

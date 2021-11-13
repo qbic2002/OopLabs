@@ -19,5 +19,9 @@ namespace Banks.Entities
         }
 
         public override int GetHashCode() => Id.GetHashCode();
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
     }
 }

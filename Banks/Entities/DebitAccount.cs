@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Transactions;
 using Banks.Services;
 using Banks.Tools;
 
@@ -36,6 +34,11 @@ namespace Banks.Entities
         public decimal Percent { get; set; }
         public bool IsDoubtful => Client.IsDoubtful;
         public ReadOnlyCollection<ITransaction> Transactions { get; }
+
+        public override string ToString()
+        {
+            return new string($"ID: {Id}; Type: {BankAccountType}; Credits: {Credits}");
+        }
 
         public void AddTransactionToHistory(ITransaction transaction)
         {

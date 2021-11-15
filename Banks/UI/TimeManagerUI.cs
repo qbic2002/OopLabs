@@ -19,7 +19,7 @@ namespace Banks.UI
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("TIME MANAGER MENU");
+                Console.WriteLine($"TIME MANAGER MENU. Days: {_timeManager.Day}");
                 Console.WriteLine("1 - Skip 1 day");
                 Console.WriteLine("2 - Skip 1 month");
                 if (WaitForAction())

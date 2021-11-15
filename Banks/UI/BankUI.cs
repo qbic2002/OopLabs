@@ -105,8 +105,8 @@ namespace Banks.UI
             decimal secondPercent = Convert.ToDecimal(Console.ReadLine());
             decimal thirdPercent = Convert.ToDecimal(Console.ReadLine());
             Console.WriteLine("Enter debit percent and credit percent");
-            int debitPercent = Convert.ToInt32(Console.ReadLine());
-            int creditCommission = Convert.ToInt32(Console.ReadLine());
+            decimal debitPercent = Convert.ToDecimal(Console.ReadLine());
+            decimal creditCommission = Convert.ToDecimal(Console.ReadLine());
             try
             {
                 _bank.SetPercents(new DepositPercent(firstPercent, secondPercent, thirdPercent), debitPercent, creditCommission);

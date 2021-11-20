@@ -5,7 +5,7 @@ using Banks.Tools;
 
 namespace Banks.UI
 {
-    public class TimeManagerUI
+    public class TimeManagerUI : ConsoleUI
     {
         private TimeManager _timeManager;
 
@@ -18,7 +18,7 @@ namespace Banks.UI
         {
             while (true)
             {
-                Console.Clear();
+                Clear();
                 Console.WriteLine($"TIME MANAGER MENU. Days: {_timeManager.Day}");
                 Console.WriteLine("1 - Skip 1 day");
                 Console.WriteLine("2 - Skip 1 month");
@@ -29,7 +29,7 @@ namespace Banks.UI
 
         private bool WaitForAction()
         {
-            int choose = Convert.ToInt32(Console.ReadLine());
+            int choose = ReadInt();
             switch (choose)
             {
                 case 1:
@@ -40,7 +40,7 @@ namespace Banks.UI
                     catch (BanksException e)
                     {
                         Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WaitEnter();
                     }
 
                     break;
@@ -52,7 +52,7 @@ namespace Banks.UI
                     catch (BanksException e)
                     {
                         Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WaitEnter();
                     }
 
                     break;

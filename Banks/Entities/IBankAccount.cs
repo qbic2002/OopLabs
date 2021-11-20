@@ -6,7 +6,7 @@ namespace Banks.Entities
     {
         ReadOnlyCollection<INotification> Notifications { get; }
         ReadOnlyCollection<ITransaction> Transactions { get; }
-        bool IsDoubtful { get; }
+        Bank Bank { get; }
         decimal Percent { get; set; }
         int DaysOpened { get; }
         Client Client { get; }
@@ -23,6 +23,5 @@ namespace Banks.Entities
         decimal AddInterest();
         void HandleNotification(INotification notification);
         void AddOneDay();
-        string ToString();
     }
 }

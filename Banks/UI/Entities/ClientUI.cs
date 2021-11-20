@@ -5,7 +5,7 @@ using Banks.Tools;
 
 namespace Banks.UI
 {
-    public class ClientUI
+    public class ClientUI : ConsoleUI
     {
         private Client _client;
 
@@ -18,7 +18,7 @@ namespace Banks.UI
         {
             while (true)
             {
-                Console.Clear();
+                Clear();
                 Console.WriteLine($"CLIENT {_client.FirstName} {_client.LastName} MENU");
                 Console.WriteLine("1 - Set passport");
                 Console.WriteLine("2 - Set address");
@@ -37,9 +37,9 @@ namespace Banks.UI
 
         public void SetPassport()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter passport");
-            int passport = Convert.ToInt32(Console.ReadLine());
+            int passport = ReadInt();
             try
             {
                 _client.SetPassport(passport);
@@ -47,15 +47,15 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         public void SetAddress()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter address");
-            string address = Console.ReadLine();
+            string address = ReadString();
             try
             {
                 _client.SetAddress(address);
@@ -63,13 +63,13 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private bool WaitForAction()
         {
-            int choose = Convert.ToInt32(Console.ReadLine());
+            int choose = ReadInt();
             switch (choose)
             {
                 case 1:
@@ -113,7 +113,7 @@ namespace Banks.UI
 
         private void ShowBanksAccounts()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
             _client.BankAccounts.ForEach(bankAccount => Console.WriteLine($"{index++}: {bankAccount}"));
             ChooseBankAccount();
@@ -121,7 +121,7 @@ namespace Banks.UI
 
         private void ChooseBankAccount()
         {
-            int bankAccountIndex = Convert.ToInt32(Console.ReadLine());
+            int bankAccountIndex = ReadInt();
             if (bankAccountIndex == 0)
                 return;
             if (bankAccountIndex > _client.BankAccounts.Count)
@@ -133,15 +133,15 @@ namespace Banks.UI
 
         private void ShowNotifications()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
             _client.Notifications.ToList().ForEach(notification => Console.WriteLine($"{index++}: {notification}"));
-            Console.ReadLine();
+            WaitEnter();
         }
 
         private void ShowTransactions()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
             _client.Transactions.ToList().ForEach(transaction => Console.WriteLine($"{index++}: {transaction}"));
             CancelTransaction();
@@ -149,7 +149,7 @@ namespace Banks.UI
 
         private void CancelTransaction()
         {
-            int transactionIndex = Convert.ToInt32(Console.ReadLine());
+            int transactionIndex = ReadInt();
             if (transactionIndex == 0)
                 return;
             if (transactionIndex > _client.Transactions.Count)
@@ -161,20 +161,20 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void ShowInfo()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine($"First Name: {_client.FirstName}");
             Console.WriteLine($"Last Name: {_client.LastName}");
             Console.WriteLine($"Address: {_client.Address}");
             Console.WriteLine($"Passport: {_client.Passport}");
             Console.WriteLine($"Doubtful: {_client.IsDoubtful}");
             Console.WriteLine($"Bank: {_client.Bank}");
-            Console.ReadLine();
+            WaitEnter();
         }
 
         private void CreateDebitAccount()
@@ -186,7 +186,7 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
@@ -199,18 +199,18 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void CreateDepositAccount()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter start deposit");
-            decimal startDeposit = Convert.ToDecimal(Console.ReadLine());
-            Console.Clear();
+            decimal startDeposit = ReadDecimal();
+            Clear();
             Console.WriteLine("Enter term");
-            int term = Convert.ToInt32(Console.ReadLine());
+            int term = ReadInt();
             try
             {
                 _client.CreateBankAccount(BankAccountType.Deposit, startDeposit, term);
@@ -218,15 +218,15 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void IsReceiveNotifications()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Would you like to receive notifications?\n1 - Yes\n2 - No");
-            int choose = Convert.ToInt32(Console.ReadLine());
+            int choose = ReadInt();
             switch (choose)
             {
                 case 1:
@@ -237,7 +237,7 @@ namespace Banks.UI
                     catch (BanksException e)
                     {
                         Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WaitEnter();
                     }
 
                     break;
@@ -249,7 +249,7 @@ namespace Banks.UI
                     catch (BanksException e)
                     {
                         Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WaitEnter();
                     }
 
                     break;

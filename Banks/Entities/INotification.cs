@@ -2,9 +2,8 @@
 {
     public interface INotification
     {
-        public IBankAccount BankAccount { get; }
+        public IBankAccount BankAccount { get; set; }
         public decimal OldValue { get; }
         public decimal NewValue { get; }
-        string ToString();
     }
 }

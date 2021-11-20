@@ -5,7 +5,7 @@ using Banks.Tools;
 
 namespace Banks.UI
 {
-    public class BankAccountUI
+    public class BankAccountUI : ConsoleUI
     {
         private IBankAccount _bankAccount;
 
@@ -18,7 +18,7 @@ namespace Banks.UI
         {
             while (true)
             {
-                Console.Clear();
+                Clear();
                 Console.WriteLine($"{_bankAccount.BankAccountType} ACCOUNT {_bankAccount.Id} MENU. Credits: {_bankAccount.Credits:0.00}");
                 Console.WriteLine("1 - Put credits");
                 Console.WriteLine("2 - Withdraw credits");
@@ -33,7 +33,8 @@ namespace Banks.UI
 
         private bool WaitForAction()
         {
-            int choose = Convert.ToInt32(Console.ReadLine());
+            int choose = ReadInt();
+
             switch (choose)
             {
                 case 1:
@@ -65,9 +66,9 @@ namespace Banks.UI
 
         private void PutCredits()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter credits to put");
-            decimal putCredits = Convert.ToDecimal(Console.ReadLine());
+            decimal putCredits = ReadDecimal();
             try
             {
                 _bankAccount.PutCredits(putCredits);
@@ -75,15 +76,15 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void WithdrawCredits()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter credits to withdraw");
-            decimal withdrawCredits = Convert.ToDecimal(Console.ReadLine());
+            decimal withdrawCredits = ReadDecimal();
             try
             {
                 _bankAccount.WithdrawCredits(withdrawCredits);
@@ -91,15 +92,15 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void TransferCredits()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine("Enter credits to transfer");
-            decimal transferCredits = Convert.ToDecimal(Console.ReadLine());
+            decimal transferCredits = ReadDecimal();
             Console.WriteLine("Enter receiver");
             var receiver = new BankAccountId(Convert.ToInt32(Console.ReadLine()));
             try
@@ -109,13 +110,13 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void ShowTransaction()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
             _bankAccount.Transactions.ToList().ForEach(transaction => Console.WriteLine($"{index++}: {transaction}"));
             CancelTransaction();
@@ -123,7 +124,7 @@ namespace Banks.UI
 
         private void CancelTransaction()
         {
-            int transactionIndex = Convert.ToInt32(Console.ReadLine());
+            int transactionIndex = ReadInt();
             if (transactionIndex == 0)
                 return;
             if (transactionIndex > _bankAccount.Transactions.Count)
@@ -135,21 +136,21 @@ namespace Banks.UI
             catch (BanksException e)
             {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WaitEnter();
             }
         }
 
         private void ShowNotifications()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
             _bankAccount.Notifications.ToList().ForEach(notification => Console.WriteLine($"{index++}: {notification}"));
-            Console.ReadLine();
+            WaitEnter();
         }
 
         private void ShowInformation()
         {
-            Console.Clear();
+            Clear();
             Console.WriteLine($"Type: {_bankAccount.BankAccountType}");
             Console.WriteLine($"Id: {_bankAccount.Id}");
             Console.WriteLine($"Client: {_bankAccount.Client}");
@@ -162,7 +163,7 @@ namespace Banks.UI
                 Console.WriteLine($"Term: {depositAccount.Term}");
             }
 
-            Console.ReadLine();
+            WaitEnter();
         }
     }
 }

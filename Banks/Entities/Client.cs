@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Banks.Tools;
 
 namespace Banks.Entities
@@ -44,8 +45,7 @@ namespace Banks.Entities
         {
             get
             {
-                var transactions = new List<ITransaction>();
-                BankAccounts.ForEach(bankAccount => transactions.AddRange(bankAccount.Transactions));
+                var transactions = BankAccounts.SelectMany(bankAccount => bankAccount.Transactions).ToList();
                 return new ReadOnlyCollection<ITransaction>(transactions);
             }
         }
@@ -54,8 +54,7 @@ namespace Banks.Entities
         {
             get
             {
-                var notifications = new List<INotification>();
-                BankAccounts.ForEach(bankAccount => notifications.AddRange(bankAccount.Notifications));
+                var notifications = BankAccounts.SelectMany(bankAccount => bankAccount.Notifications).ToList();
                 return new ReadOnlyCollection<INotification>(notifications);
             }
         }
@@ -77,6 +76,7 @@ namespace Banks.Entities
         }
 
         public IBankAccount CreateBankAccount(BankAccountType bankAccountType, decimal startMoney = 0, int term = 365) => Bank.CreateBankAccount(this, bankAccountType, startMoney, term);
+
         public override string ToString()
         {
             return new string($"{FirstName} {LastName}");

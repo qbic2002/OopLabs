@@ -3,7 +3,7 @@ using Banks.Tools;
 
 namespace Banks.Services
 {
-    public static class TransactionBuilder
+    public static class Transactions
     {
         public static ITransaction CreateTransaction(TransactionType transactionType, decimal credits, IBankAccount sender, IBankAccount receiver = null)
         {

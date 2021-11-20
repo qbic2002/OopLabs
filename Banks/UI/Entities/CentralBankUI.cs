@@ -4,7 +4,7 @@ using Banks.Tools;
 
 namespace Banks.UI
 {
-    public class CentralBankUI
+    public class CentralBankUI : ConsoleUI
     {
         private CentralBank _centralBank;
         public CentralBankUI(CentralBank centralBank)
@@ -16,13 +16,13 @@ namespace Banks.UI
         {
             while (true)
             {
-                Console.Clear();
-                Console.WriteLine("CENTRAL BANK MENU");
-                Console.WriteLine("1 - Create new Bank");
-                Console.WriteLine("2 - Charge interest");
-                Console.WriteLine("3 - Add Interest");
-                Console.WriteLine("4 - Show Banks");
-                Console.WriteLine("5 - Go to time manager");
+                Clear();
+                WriteString("CENTRAL BANK MENU");
+                WriteString("1 - Create new Bank");
+                WriteString("2 - Charge interest");
+                WriteString("3 - Add Interest");
+                WriteString("4 - Show Banks");
+                WriteString("5 - Go to time manager");
                 if (WaitForAction())
                     break;
             }
@@ -30,7 +30,7 @@ namespace Banks.UI
 
         private bool WaitForAction()
         {
-            int choose = Convert.ToInt32(Console.ReadLine());
+            int choose = ReadInt();
             switch (choose)
             {
                 case 1:
@@ -43,8 +43,8 @@ namespace Banks.UI
                     }
                     catch (BanksException e)
                     {
-                        Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WriteString(e.Message);
+                        WaitEnter();
                     }
 
                     break;
@@ -55,8 +55,8 @@ namespace Banks.UI
                     }
                     catch (BanksException e)
                     {
-                        Console.WriteLine(e.Message);
-                        Console.ReadLine();
+                        WriteString(e.Message);
+                        WaitEnter();
                     }
 
                     break;
@@ -78,31 +78,31 @@ namespace Banks.UI
 
         private void AddBank()
         {
-            Console.Clear();
-            Console.WriteLine("Enter Name");
-            string bankName = Console.ReadLine();
+            Clear();
+            WriteString("Enter Name");
+            string bankName = ReadString();
             try
             {
                 _centralBank.AddBank(bankName);
             }
             catch (BanksException e)
             {
-                Console.WriteLine(e.Message);
-                Console.ReadLine();
+                WriteString(e.Message);
+                WaitEnter();
             }
         }
 
         private void ShowBanks()
         {
-            Console.Clear();
+            Clear();
             int index = 1;
-            _centralBank.Banks.ForEach(bank => Console.WriteLine(index++ + ": " + bank));
+            _centralBank.Banks.ForEach(bank => WriteString(index++ + ": " + bank));
             ChooseBank();
         }
 
         private void ChooseBank()
         {
-            int bankIndex = Convert.ToInt32(Console.ReadLine());
+            int bankIndex = ReadInt();
             if (bankIndex == 0)
                 return;
             if (bankIndex > _centralBank.Banks.Count)

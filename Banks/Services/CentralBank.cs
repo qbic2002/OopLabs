@@ -8,13 +8,12 @@ namespace Banks.Services
     public class CentralBank : ITransactionHandler
     {
         private Dictionary<Bank, int> _bankAndKey = new ();
+        private ITransactionHandler _nextTransactionHandler = null;
 
         public CentralBank()
         {
-            BankMethods = new BankMethods(this);
         }
 
-        public BankMethods BankMethods { get; }
         public TimeManager TimeManager { get; set; }
         public List<Bank> Banks { get; } = new List<Bank>();
 
@@ -59,63 +58,47 @@ namespace Banks.Services
         {
             if (transaction is null)
                 throw new BanksException("Incorrect transaction");
-            TransactionBuilder.BecomeHandler(this, transaction);
-            if (transaction.TransactionType != TransactionType.Transfer)
+            Transactions.BecomeHandler(this, transaction);
+            if (transaction.Sender == transaction.Receiver)
             {
-                Bank bank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
-                if (bank is null)
-                {
-                    TransactionBuilder.FailTransaction(transaction);
-                    throw new BanksException("Incorrect transaction");
-                }
-
-                bank.HandleTransaction(transaction);
+                SetNextTransactionHandler(Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver)));
+                _nextTransactionHandler.HandleTransaction(transaction);
             }
-            else
+
+            if (transaction.Sender != transaction.Receiver)
             {
                 Bank senderBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Sender));
                 Bank receiverBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
                 if (senderBank is null)
                 {
-                    TransactionBuilder.FailTransaction(transaction);
+                    Transactions.FailTransaction(transaction);
                     throw new BanksException("Incorrect sender");
                 }
 
                 if (receiverBank is null)
                 {
-                    TransactionBuilder.FailTransaction(transaction);
+                    Transactions.FailTransaction(transaction);
                     throw new BanksException("Incorrect receiver");
                 }
 
                 if (!senderBank.BankAccountAndCredits.ContainsKey(transaction.Sender))
                 {
-                    TransactionBuilder.FailTransaction(transaction);
+                    Transactions.FailTransaction(transaction);
                     throw new BanksException("Cannot find info about sender");
                 }
 
                 if (!receiverBank.BankAccountAndCredits.ContainsKey(transaction.Receiver))
                 {
-                    TransactionBuilder.FailTransaction(transaction);
+                    Transactions.FailTransaction(transaction);
                     throw new BanksException("Cannot find info about receiver");
                 }
 
-                decimal senderAccountCredits = transaction.Sender.Credits;
-                decimal minimalCreditsOnSenderAccount = transaction.Sender.MinimalCredits;
-                if (senderAccountCredits - transaction.Credits < minimalCreditsOnSenderAccount)
+                switch (transaction.TransactionType)
                 {
-                    TransactionBuilder.FailTransaction(transaction);
-                    throw new BanksException("Too low credits on account");
+                    case TransactionType.Transfer:
+                        TransferTransactionHandler(transaction as TransferTransaction);
+                        break;
                 }
-
-                if (transaction.Sender.IsDoubtful && transaction.Credits > senderBank.DoubtfulLimit)
-                {
-                    TransactionBuilder.FailTransaction(transaction);
-                    throw new BanksException("Over the doubtful limit");
-                }
-
-                senderBank.ChangeCredits(_bankAndKey[senderBank], transaction.Sender, transaction.Sender.Credits - transaction.Credits);
-                receiverBank.ChangeCredits(_bankAndKey[receiverBank], transaction.Receiver, transaction.Receiver.Credits + transaction.Credits);
-                TransactionBuilder.SuccessTransaction(transaction);
             }
         }
 
@@ -166,6 +149,32 @@ namespace Banks.Services
                 receiverBank.ChangeCredits(_bankAndKey[receiverBank], transaction.Receiver, transaction.Receiver.Credits - transaction.Credits);
                 transaction.Status = TransactionStatus.Cancel;
             }
+        }
+
+        public void SetNextTransactionHandler(ITransactionHandler nextHandler)
+        {
+            _nextTransactionHandler = nextHandler ?? throw new BanksException("Incorrect handler to set");
+        }
+
+        private void TransferTransactionHandler(TransferTransaction transaction)
+        {
+            decimal senderAccountCredits = transaction.Sender.Credits;
+            decimal minimalCreditsOnSenderAccount = transaction.Sender.MinimalCredits;
+            if (senderAccountCredits - transaction.Credits < minimalCreditsOnSenderAccount)
+            {
+                Transactions.FailTransaction(transaction);
+                throw new BanksException("Too low credits on account");
+            }
+
+            if (transaction.Sender.Client.IsDoubtful && transaction.Credits > transaction.Sender.Bank.DoubtfulLimit)
+            {
+                Transactions.FailTransaction(transaction);
+                throw new BanksException("Over the doubtful limit");
+            }
+
+            transaction.Sender.Bank.ChangeCredits(_bankAndKey[transaction.Sender.Bank], transaction.Sender, transaction.Sender.Credits - transaction.Credits);
+            transaction.Receiver.Bank.ChangeCredits(_bankAndKey[transaction.Receiver.Bank], transaction.Receiver, transaction.Receiver.Credits + transaction.Credits);
+            Transactions.SuccessTransaction(transaction);
         }
     }
 }

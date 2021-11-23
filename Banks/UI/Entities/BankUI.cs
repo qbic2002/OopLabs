@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Banks.Entities;
+﻿using Banks.Entities;
 using Banks.Tools;
 
-namespace Banks.UI
+namespace Banks.UI.Entities
 {
     public class BankUI : ConsoleUI
     {

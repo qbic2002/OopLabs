@@ -1,7 +1,7 @@
 ﻿using System;
 using Banks.UI.Tools;
 
-namespace Banks.UI
+namespace Banks.UI.Entities
 {
     public abstract class ConsoleUI : IReadInt, IReadDecimal, IWriteString, IClear, IWaitEnter, IReadString
     {

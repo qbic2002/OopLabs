@@ -1,4 +1,4 @@
-﻿namespace Banks.UI
+﻿namespace Banks.UI.Entities
 {
     public interface IWaitEnter
     {

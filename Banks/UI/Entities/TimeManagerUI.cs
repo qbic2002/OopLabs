@@ -1,9 +1,8 @@
 ﻿using System;
-using Banks.Entities;
 using Banks.Services;
 using Banks.Tools;
 
-namespace Banks.UI
+namespace Banks.UI.Entities
 {
     public class TimeManagerUI : ConsoleUI
     {

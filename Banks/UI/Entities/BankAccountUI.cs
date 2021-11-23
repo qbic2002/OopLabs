@@ -3,7 +3,7 @@ using System.Linq;
 using Banks.Entities;
 using Banks.Tools;
 
-namespace Banks.UI
+namespace Banks.UI.Entities
 {
     public class BankAccountUI : ConsoleUI
     {

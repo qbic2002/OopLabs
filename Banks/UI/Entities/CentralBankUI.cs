@@ -1,8 +1,7 @@
-﻿using System;
-using Banks.Services;
+﻿using Banks.Services;
 using Banks.Tools;
 
-namespace Banks.UI
+namespace Banks.UI.Entities
 {
     public class CentralBankUI : ConsoleUI
     {

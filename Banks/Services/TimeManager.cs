@@ -16,7 +16,7 @@ namespace Banks.Services
         public void SkipDay()
         {
             CentralBank.AddOneDay();
-            Day++;
+            ++Day;
             if (Day % 30 == 0)
                 CentralBank.AddInterest();
         }

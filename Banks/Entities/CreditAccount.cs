@@ -1,13 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Banks.Services;
-using Banks.Tools;
 
 namespace Banks.Entities
 {
     public class CreditAccount : BankAccount
     {
-        private decimal _extraMoney = 0;
         private List<ITransaction> _transactions = new ();
         private List<INotification> _notifications = new ();
 
@@ -25,7 +21,7 @@ namespace Banks.Entities
         {
             if (Credits < 0)
             {
-                _extraMoney -= Percent;
+                ExtraMoney -= Percent;
             }
         }
     }

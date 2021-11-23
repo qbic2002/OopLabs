@@ -1,5 +1,4 @@
-﻿using System;
-using Banks.Tools;
+﻿using Banks.Tools;
 
 namespace Banks.Entities
 {

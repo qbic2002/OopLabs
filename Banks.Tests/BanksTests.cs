@@ -11,11 +11,13 @@ namespace Banks.Tests
     public class BanksTests
     {
         private CentralBank _centralBank;
+        private TimeManager _timeManager;
 
         [SetUp]
         public void SetUp()
         {
             _centralBank = new CentralBank();
+            _timeManager = new TimeManager(_centralBank);
         }
         
         [TestCase(100)]
@@ -130,6 +132,36 @@ namespace Banks.Tests
             Assert.AreEqual(transferMoney, receiver.Credits);
             Assert.AreEqual(0, depositAccount.Credits);
             depositAccount.Transactions[1].Cancel();
+        }
+
+        [TestCase(1000, 0.02)]
+        [TestCase(500, 0.1)]
+        public void AddPercentTest(decimal putCredits, decimal percent)
+        {
+            Bank bank1 = _centralBank.AddBank("Sperbank");
+            Client testClient = bank1.AddClient("TestFN", "TestLN");
+            bank1.SetDebitPercent(percent);
+            bank1.SetDepositPercents(0.01M, new []{new DepositPercentRange(percent)});
+            IBankAccount debitAccount = testClient.CreateBankAccount(BankAccountType.Debit);
+            IBankAccount depositAccount = testClient.CreateBankAccount(BankAccountType.Deposit, putCredits);
+            debitAccount.PutCredits(putCredits);
+            _timeManager.SkipMonth();
+            Assert.AreEqual((30 * putCredits * percent / 365) + putCredits, debitAccount.Credits);
+            Assert.AreEqual((30 * putCredits * percent / 365) + putCredits, depositAccount.Credits);
+        }
+        
+        [TestCase(100, 0.02)]
+        [TestCase(500, 0.1)]
+        public void AddCommissionTest(decimal withdrawCredits, decimal commission)
+        {
+            Bank bank1 = _centralBank.AddBank("Sperbank");
+            Client testClient = bank1.AddClient("TestFN", "TestLN");
+            bank1.SetCreditCommission(commission);
+            bank1.SetDepositPercents(0.01M, new []{new DepositPercentRange(commission)});
+            IBankAccount creditAccount = testClient.CreateBankAccount(BankAccountType.Credit);
+            creditAccount.WithdrawCredits(withdrawCredits);
+            _timeManager.SkipMonth();
+            Assert.AreEqual(-withdrawCredits - (30 * commission), creditAccount.Credits);
         }
     }
 }

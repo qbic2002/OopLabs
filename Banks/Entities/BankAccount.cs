@@ -1,14 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using Banks.Services;
 using Banks.Tools;
 
 namespace Banks.Entities
 {
     public abstract class BankAccount : IBankAccount
     {
-        private decimal _extraMoney;
         private List<INotification> _notifications = new ();
 
         protected BankAccount(Client client, BankAccountId id, decimal minimalCredits, decimal percent, BankAccountType bankAccountType)
@@ -33,6 +30,7 @@ namespace Banks.Entities
         public decimal MinimalCredits { get; set; }
         public decimal Credits => Bank.BankAccountAndCredits[this];
         public BankAccountId Id { get; }
+        protected decimal ExtraMoney { get; set; }
         public ITransaction PutCredits(decimal credits)
         {
             if (credits <= 0)
@@ -64,8 +62,8 @@ namespace Banks.Entities
 
         public decimal AddInterest()
         {
-            decimal extraMoney = _extraMoney;
-            _extraMoney = 0;
+            decimal extraMoney = this.ExtraMoney;
+            this.ExtraMoney = 0;
             return extraMoney;
         }
 

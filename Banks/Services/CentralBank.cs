@@ -9,9 +9,11 @@ namespace Banks.Services
     {
         private Dictionary<Bank, int> _bankAndKey = new ();
         private ITransactionHandler _nextTransactionHandler = null;
+        private Random _random;
 
         public CentralBank()
         {
+            _random = new Random();
         }
 
         public TimeManager TimeManager { get; set; }
@@ -22,9 +24,11 @@ namespace Banks.Services
             if (name is null)
                 throw new BanksException("Incorrect name");
 
-            var random = new Random();
-            int key = random.Next(int.MaxValue);
+            _random = new Random();
+            int key = _random.Next(int.MaxValue);
             var bank = new Bank(key, this, name);
+            var transactionManager = new TransactionManager(bank);
+            bank.SetTransactionManager(transactionManager);
             Banks.Add(bank);
             _bankAndKey.Add(bank, key);
             return bank;
@@ -58,7 +62,7 @@ namespace Banks.Services
         {
             if (transaction is null)
                 throw new BanksException("Incorrect transaction");
-            Transactions.BecomeHandler(this, transaction);
+            TransactionManager.BecomeHandler(this, transaction);
             if (transaction.Sender == transaction.Receiver)
             {
                 SetNextTransactionHandler(Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver)));
@@ -71,25 +75,25 @@ namespace Banks.Services
                 Bank receiverBank = Banks.Find(bank => bank.ContainsBankAccount(transaction.Receiver));
                 if (senderBank is null)
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Incorrect sender");
                 }
 
                 if (receiverBank is null)
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Incorrect receiver");
                 }
 
                 if (!senderBank.BankAccountAndCredits.ContainsKey(transaction.Sender))
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Cannot find info about sender");
                 }
 
                 if (!receiverBank.BankAccountAndCredits.ContainsKey(transaction.Receiver))
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Cannot find info about receiver");
                 }
 
@@ -162,19 +166,19 @@ namespace Banks.Services
             decimal minimalCreditsOnSenderAccount = transaction.Sender.MinimalCredits;
             if (senderAccountCredits - transaction.Credits < minimalCreditsOnSenderAccount)
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Too low credits on account");
             }
 
             if (transaction.Sender.Client.IsDoubtful && transaction.Credits > transaction.Sender.Bank.DoubtfulLimit)
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Over the doubtful limit");
             }
 
             transaction.Sender.Bank.ChangeCredits(_bankAndKey[transaction.Sender.Bank], transaction.Sender, transaction.Sender.Credits - transaction.Credits);
             transaction.Receiver.Bank.ChangeCredits(_bankAndKey[transaction.Receiver.Bank], transaction.Receiver, transaction.Receiver.Credits + transaction.Credits);
-            Transactions.SuccessTransaction(transaction);
+            TransactionManager.SuccessTransaction(transaction);
         }
     }
 }

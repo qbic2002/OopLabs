@@ -19,7 +19,6 @@ namespace Banks.Entities
         ITransaction TransferCredits(decimal credits, BankAccountId receiverId);
         void ChargeInterest();
         void CancelTransaction(ITransaction transaction);
-        void AddTransactionToHistory(ITransaction transaction);
         decimal AddInterest();
         void HandleNotification(INotification notification);
         void AddOneDay();

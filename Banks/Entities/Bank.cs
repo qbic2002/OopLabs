@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Banks.Services;
 using Banks.Tools;
 
@@ -14,6 +15,7 @@ namespace Banks.Entities
         private Dictionary<DepositAccount, int> _depositAccountAndTerm = new ();
         private int _key;
         private ITransactionHandler _nextTransactionHandler = null;
+        private Random _random;
 
         public Bank(int key, CentralBank centralBank, string name)
         {
@@ -25,6 +27,8 @@ namespace Banks.Entities
             ClientsAndAccounts = new ReadOnlyDictionary<Client, List<IBankAccount>>(_clientAndAccounts);
             DepositAccountAndTerm = new ReadOnlyDictionary<DepositAccount, int>(_depositAccountAndTerm);
 
+            _random = new Random();
+
             SetNextTransactionHandler(centralBank);
         }
 
@@ -35,6 +39,7 @@ namespace Banks.Entities
         public DepositPercent DepositPercent { get; private set; } = DepositPercent.GetDefault();
         public decimal CreditLowLimit { get; private set; } = -100000M;
         public decimal DoubtfulLimit { get; private set; } = 5000;
+        public TransactionManager TransactionManager { get; private set; }
         public ReadOnlyDictionary<IBankAccount, decimal> BankAccountAndCredits { get; }
         public ReadOnlyDictionary<Client, List<IBankAccount>> ClientsAndAccounts { get; }
         public List<IBankAccount> BankAccounts => _bankAccountAndCredits.Keys.ToList();
@@ -139,7 +144,7 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect start money");
 
             IBankAccount bankAccount = null;
-            var id = new BankAccountId(new Random().Next(0, 1000000000));
+            var id = new BankAccountId(_random.Next(0, 1000000000));
             switch (bankAccountType)
             {
                 case BankAccountType.Debit:
@@ -177,7 +182,7 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect transaction");
             if (transaction.Status != TransactionStatus.Pending)
                 throw new BanksException("Not pending transaction");
-            Transactions.BecomeHandler(this, transaction);
+            TransactionManager.BecomeHandler(this, transaction);
 
             switch (transaction.TransactionType)
             {
@@ -227,6 +232,11 @@ namespace Banks.Entities
             _nextTransactionHandler = nextHandler ?? throw new BanksException("Incorrect handler to set");
         }
 
+        public void SetTransactionManager(TransactionManager transactionManager)
+        {
+            TransactionManager = transactionManager ?? throw new BanksException("Incorrect transaction manager");
+        }
+
         public override string ToString()
         {
             return new string($"{Name}");
@@ -246,7 +256,7 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect transaction");
             if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Cannot find info about sender");
             }
 
@@ -254,24 +264,33 @@ namespace Banks.Entities
             decimal minimalCreditsOnAccount = transaction.Sender.MinimalCredits;
             if (accountCredits - transaction.Credits < minimalCreditsOnAccount)
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Too low credits on account");
             }
 
             if (transaction.Sender.Client.IsDoubtful && transaction.Credits > DoubtfulLimit)
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Over the doubtful limit");
             }
 
             if (transaction.Sender is DepositAccount depositSender)
             {
-                if (DepositAccountAndTerm[depositSender] > depositSender.Term)
+                if (!DepositAccountAndTerm.ContainsKey(depositSender))
+                {
+                    TransactionManager.FailTransaction(transaction);
+                    throw new BanksException("Cannot find info about term");
+                }
+
+                if (DepositAccountAndTerm[depositSender] > depositSender.DaysOpened)
+                {
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Term not expired");
+                }
             }
 
             _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
-            Transactions.SuccessTransaction(transaction);
+            TransactionManager.SuccessTransaction(transaction);
         }
 
         private void PutTransactionHandler(PutTransaction transaction)
@@ -280,12 +299,12 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect transaction");
             if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Cannot find info about sender");
             }
 
             _bankAccountAndCredits[transaction.Sender] += transaction.Credits;
-            Transactions.SuccessTransaction(transaction);
+            TransactionManager.SuccessTransaction(transaction);
         }
 
         private void TransferTransactionHandler(TransferTransaction transaction)
@@ -294,8 +313,23 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect transaction");
             if (!_bankAccountAndCredits.ContainsKey(transaction.Sender))
             {
-                Transactions.FailTransaction(transaction);
+                TransactionManager.FailTransaction(transaction);
                 throw new BanksException("Cannot find info about sender");
+            }
+
+            if (transaction.Sender is DepositAccount depositSender)
+            {
+                if (!DepositAccountAndTerm.ContainsKey(depositSender))
+                {
+                    TransactionManager.FailTransaction(transaction);
+                    throw new BanksException("Cannot find info about term");
+                }
+
+                if (DepositAccountAndTerm[depositSender] > depositSender.DaysOpened)
+                {
+                    TransactionManager.FailTransaction(transaction);
+                    throw new BanksException("Term not expired");
+                }
             }
 
             if (!ContainsBankAccount(transaction.Receiver))
@@ -308,25 +342,25 @@ namespace Banks.Entities
                 decimal minimalCreditsOnAccount = transaction.Sender.MinimalCredits;
                 if (accountCredits - transaction.Credits < minimalCreditsOnAccount)
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Too low credits on account");
                 }
 
                 if (transaction.Sender.Client.IsDoubtful && transaction.Credits > DoubtfulLimit)
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Over the doubtful limit");
                 }
 
                 if (!_bankAccountAndCredits.ContainsKey(transaction.Receiver))
                 {
-                    Transactions.FailTransaction(transaction);
+                    TransactionManager.FailTransaction(transaction);
                     throw new BanksException("Cannot find info about receiver");
                 }
 
                 _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
                 _bankAccountAndCredits[transaction.Receiver] += transaction.Credits;
-                Transactions.SuccessTransaction(transaction);
+                TransactionManager.SuccessTransaction(transaction);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Banks.Services;
 using Banks.Tools;
 
@@ -9,7 +10,6 @@ namespace Banks.Entities
     {
         private decimal _extraMoney;
         private List<INotification> _notifications = new ();
-        private List<ITransaction> _transactions = new ();
 
         protected BankAccount(Client client, BankAccountId id, decimal minimalCredits, decimal percent, BankAccountType bankAccountType)
         {
@@ -24,7 +24,7 @@ namespace Banks.Entities
         }
 
         public ReadOnlyCollection<INotification> Notifications => new ReadOnlyCollection<INotification>(_notifications);
-        public ReadOnlyCollection<ITransaction> Transactions => new ReadOnlyCollection<ITransaction>(_transactions);
+        public ReadOnlyCollection<ITransaction> Transactions => Bank.TransactionManager.BankAccountAndTransactions[this].AsReadOnly();
         public Bank Bank { get; }
         public decimal Percent { get; set; }
         public int DaysOpened { get; private set; }
@@ -37,9 +37,7 @@ namespace Banks.Entities
         {
             if (credits <= 0)
                 throw new BanksException("Incorrect credits");
-            ITransaction putTransaction = Services.Transactions.CreateTransaction(TransactionType.Put, credits, this);
-            AddTransactionToHistory(putTransaction);
-            Client.Bank.HandleTransaction(putTransaction);
+            ITransaction putTransaction = Bank.TransactionManager.CreateTransaction(TransactionType.Put, credits, this);
             return putTransaction;
         }
 
@@ -47,14 +45,12 @@ namespace Banks.Entities
         {
             if (credits <= 0)
                 throw new BanksException("Incorrect credits");
-            ITransaction withdrawTransaction = Services.Transactions.CreateTransaction(TransactionType.Withdraw, credits, this);
-            AddTransactionToHistory(withdrawTransaction);
-            Client.Bank.HandleTransaction(withdrawTransaction);
+            ITransaction withdrawTransaction = Bank.TransactionManager.CreateTransaction(TransactionType.Withdraw, credits, this);
             return withdrawTransaction;
         }
 
         public ITransaction TransferCredits(decimal credits, BankAccountId receiverId) =>
-            TransferCredits(credits, Client.Bank.CentralBank.FindBankAccountById(receiverId));
+            TransferCredits(credits, Bank.CentralBank.FindBankAccountById(receiverId));
 
         public abstract void ChargeInterest();
 
@@ -64,14 +60,6 @@ namespace Banks.Entities
                 throw new BanksException("Incorrect transaction");
 
             transaction.Cancel();
-        }
-
-        public void AddTransactionToHistory(ITransaction transaction)
-        {
-            if (transaction is null)
-                throw new BanksException("Incorrect transaction");
-
-            _transactions.Add(transaction);
         }
 
         public decimal AddInterest()
@@ -97,9 +85,7 @@ namespace Banks.Entities
         {
             if (credits <= 0)
                 throw new BanksException("Incorrect credits");
-            ITransaction transferTransaction = Services.Transactions.CreateTransaction(TransactionType.Transfer, credits, this, receiver);
-            AddTransactionToHistory(transferTransaction);
-            Client.Bank.HandleTransaction(transferTransaction);
+            ITransaction transferTransaction = Bank.TransactionManager.CreateTransaction(TransactionType.Transfer, credits, this, receiver);
             return transferTransaction;
         }
     }

@@ -264,6 +264,12 @@ namespace Banks.Entities
                 throw new BanksException("Over the doubtful limit");
             }
 
+            if (transaction.Sender is DepositAccount depositSender)
+            {
+                if (DepositAccountAndTerm[depositSender] > depositSender.Term)
+                    throw new BanksException("Term not expired");
+            }
+
             _bankAccountAndCredits[transaction.Sender] -= transaction.Credits;
             Transactions.SuccessTransaction(transaction);
         }

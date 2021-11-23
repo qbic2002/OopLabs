@@ -1,4 +1,5 @@
-﻿using Banks.Services;
+﻿using System;
+using Banks.Services;
 using Banks.Tools;
 
 namespace Banks.UI.Entities
@@ -23,7 +24,7 @@ namespace Banks.UI.Entities
                 WriteString("4 - Show Banks");
                 WriteString("5 - Go to time manager");
                 if (WaitForAction())
-                    break;
+                    Environment.Exit(0);
             }
         }
 

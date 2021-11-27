@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Backups.Tools;
@@ -9,6 +10,7 @@ namespace Backups.Entities
     {
         private List<JobObject> _jobObjects;
         private IAlgorithm _storageAlgorithm;
+        private int _restorePointCount = 0;
         public BackupJob(Backup backup, IRepository repository, string name, IAlgorithm storageAlgorithm, params JobObject[] jobObjects)
         {
             Backup = backup ?? throw new BackupException("Incorrect backup");
@@ -20,7 +22,7 @@ namespace Backups.Entities
             _storageAlgorithm = storageAlgorithm ?? throw new BackupException("Incorrect algorithm");
 
             JobObjects = new ReadOnlyCollection<JobObject>(_jobObjects);
-            CreateRestorePoint();
+            CreateRestorePoint(DateTime.Now);
         }
 
         public string Name { get; }
@@ -28,9 +30,9 @@ namespace Backups.Entities
         public ReadOnlyCollection<JobObject> JobObjects { get; }
         public Backup Backup { get; }
 
-        public RestorePoint CreateRestorePoint()
+        public RestorePoint CreateRestorePoint(DateTime dateTime)
         {
-            var restorePoint = new RestorePoint(Repository, Backup.RestorePoints.Count + 1, _storageAlgorithm, _jobObjects.ToArray());
+            var restorePoint = new RestorePoint(Repository, ++_restorePointCount, _storageAlgorithm, dateTime, _jobObjects.ToArray());
             Backup.AddRestorePoint(restorePoint);
             restorePoint.AddRestorePointToRepository();
             restorePoint.CreateStorage();
@@ -42,7 +44,7 @@ namespace Backups.Entities
             if (jobObject is null || _jobObjects.Contains(jobObject))
                 throw new BackupException("Incorrect job object");
             _jobObjects.Add(jobObject);
-            CreateRestorePoint();
+            CreateRestorePoint(DateTime.Now);
         }
 
         public JobObject RemoveJobObject(JobObject jobObject)
@@ -50,8 +52,20 @@ namespace Backups.Entities
             if (jobObject is null || !_jobObjects.Contains(jobObject))
                 throw new BackupException("Incorrect job object");
             _jobObjects.Remove(jobObject);
-            CreateRestorePoint();
+            CreateRestorePoint(DateTime.Now);
             return jobObject;
+        }
+
+        public void RemoveRestorePointRange(int index, int range)
+        {
+            for (int i = 0; i < range; i++)
+                RemoveRestorePoint(index);
+        }
+
+        public void RemoveRestorePoint(int index)
+        {
+            RestorePoint restorePoint = Backup.RemoveRestorePoint(index);
+            Repository.DeleteRestorePoint(restorePoint);
         }
     }
 }

@@ -64,5 +64,17 @@ namespace Backups.Entities
                 });
             });
         }
+
+        public void DeleteRestorePoint(RestorePoint restorePoint)
+        {
+            if (restorePoint is null)
+                throw new BackupException("Incorrect restore point");
+
+            string restorePointName = string.Concat("RP", restorePoint.Number);
+            string restorePointPath = System.IO.Path.Combine(Path, restorePointName);
+            if (!Directory.Exists(restorePointPath))
+                throw new BackupException("Restore point already created");
+            Directory.Delete(restorePointPath, true);
+        }
     }
 }

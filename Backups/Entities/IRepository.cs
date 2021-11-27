@@ -5,5 +5,6 @@
         void CreateRepository();
         void AddRestorePoint(RestorePoint restorePoint);
         void AddStorages(RestorePoint restorePoint, params Storage[] storages);
+        void DeleteRestorePoint(RestorePoint restorePoint);
     }
 }

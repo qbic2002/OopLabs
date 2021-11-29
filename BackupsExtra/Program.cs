@@ -1,33 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Threading;
+using Backups.Entities;
+using Backups.Services;
+using BackupsExtra.Entities;
+using BackupsExtra.Services;
 
 namespace BackupsExtra
 {
     internal class Program
     {
-        private static List<int> _ints = new ();
+        private static BackupManager _backupManager;
+        private static BackupExtraManager _backupExtraManager;
+        private static IRepository _localRepository;
         private static void Main()
         {
-            _ints.Add(1);
-            _ints.Add(3);
-            _ints.Add(2);
-            Del(_ints);
+            _backupManager = new BackupManager(@"C:\Users\golov\GitLabs\tst");
+            _backupExtraManager = new BackupExtraManager(_backupManager);
+            _localRepository = _backupManager.AddLocalRepository("testJob");
 
-            // _ints.ForEach(Console.WriteLine);
-        }
+            JobObject jobObject1 = _backupExtraManager.AddJobObject(@"C:\Users\golov\GitLabs\tst\File1.txt");
+            JobObject jobObject2 = _backupExtraManager.AddJobObject(@"C:\Users\golov\GitLabs\tst\File2.txt");
+            BackupJob job = _backupExtraManager.AddBackupJob("testJob", _localRepository, new SingleStorage(), new CountDelete(5), jobObject1, jobObject2);
+            Thread.Sleep(5000);
 
-        private static void Del(List<int> ints)
-        {
-            ints.Sort((i, i1) =>
-            {
-                if (i < i1)
-                    return -1;
-                if (i == i1)
-                    return 0;
-                return 1;
-            });
-            ints.RemoveAt(0);
+            ExtraRepositoryManager.AddExtraRepository(_localRepository).RestoreRestorePoint(job.Backup.RestorePoints[0]);
         }
     }
 }

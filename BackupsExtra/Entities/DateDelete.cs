@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Backups.Entities;
+using BackupsExtra.Services;
 using BackupsExtra.Tools;
 
 namespace BackupsExtra.Entities
@@ -16,6 +17,7 @@ namespace BackupsExtra.Entities
         public DateTime DateTime { get; }
         public void RemoveRestorePoints(BackupJob backupJob)
         {
+            IExtraRepository extraRepository = ExtraRepositoryManager.AddExtraRepository(backupJob.Repository);
             if (backupJob.Backup.RestorePoints.ToList().All(restorePoint => restorePoint.DateTime < DateTime))
                 throw new BackupsExtraException("Cannot remove all restore points");
             var restorePoints = backupJob.Backup.RestorePoints.ToList();
@@ -23,7 +25,7 @@ namespace BackupsExtra.Entities
             for (int i = 0; i < restorePoints.Count; i++)
             {
                 if (restorePoints[i].DateTime < DateTime)
-                    backupJob.RemoveRestorePoint(i);
+                    extraRepository.DeleteRestorePoints(backupJob.RemoveRestorePoint(i));
             }
         }
     }

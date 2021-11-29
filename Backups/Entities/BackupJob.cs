@@ -56,16 +56,9 @@ namespace Backups.Entities
             return jobObject;
         }
 
-        public void RemoveRestorePointRange(int index, int range)
-        {
-            for (int i = 0; i < range; i++)
-                RemoveRestorePoint(index);
-        }
+        public List<RestorePoint> RemoveRestorePointRange(int index, int range) =>
+            Backup.RemoveRestorePointRange(index, range);
 
-        public void RemoveRestorePoint(int index)
-        {
-            RestorePoint restorePoint = Backup.RemoveRestorePoint(index);
-            Repository.DeleteRestorePoint(restorePoint);
-        }
+        public RestorePoint RemoveRestorePoint(int index) => Backup.RemoveRestorePoint(index);
     }
 }

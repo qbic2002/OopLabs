@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Backups.Entities;
 using Backups.Services;
@@ -66,6 +67,19 @@ namespace BackupsExtra.Services
             if (!_backupJobsAndRemoveAlgorithms.ContainsKey(backupJob))
                 throw new BackupsExtraException("Cannot find info about remove algorithm");
             _backupJobsAndRemoveAlgorithms[backupJob].RemoveRestorePoints(backupJob);
+        }
+
+        public void Restore(RestorePoint restorePoint)
+        {
+            if (restorePoint is null)
+                throw new BackupsExtraException("incorrect restorePoint");
+
+            ExtraRepositoryManager.AddExtraRepository(restorePoint.Repository).RestoreRestorePoint(restorePoint);
+        }
+
+        public void Restore(RestorePoint restorePoint, string restorePath)
+        {
+            ExtraRepositoryManager.AddExtraRepository(restorePoint.Repository).RestoreRestorePoint(restorePoint);
         }
     }
 }

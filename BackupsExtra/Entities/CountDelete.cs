@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Backups.Entities;
+using BackupsExtra.Services;
 using BackupsExtra.Tools;
 
 namespace BackupsExtra.Entities
@@ -16,7 +18,10 @@ namespace BackupsExtra.Entities
         public int MaxRestorePoints { get; }
         public void RemoveRestorePoints(BackupJob backupJob)
         {
-            backupJob.RemoveRestorePointRange(0, backupJob.Backup.RestorePoints.Count - MaxRestorePoints);
+            IExtraRepository extraRepository = ExtraRepositoryManager.AddExtraRepository(backupJob.Repository);
+            List<RestorePoint> restorePoints = backupJob.RemoveRestorePointRange(0, backupJob.Backup.RestorePoints.Count - MaxRestorePoints);
+
+            extraRepository.DeleteRestorePoints(restorePoints.ToArray());
         }
     }
 }

@@ -23,10 +23,15 @@ namespace Backups.Entities
             return restorePoint;
         }
 
-        public void RemoveRestorePointRange(int index, int range)
+        public List<RestorePoint> RemoveRestorePointRange(int index, int range)
         {
+            var restorePoints = new List<RestorePoint>();
             for (int i = 0; i < range; i++)
-                RemoveRestorePoint(index);
+            {
+                restorePoints.Add(RemoveRestorePoint(index));
+            }
+
+            return restorePoints;
         }
     }
 }

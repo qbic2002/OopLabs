@@ -231,9 +231,9 @@ namespace BackupsExtra.Entities
                 writer.WritePropertyName("Name");
                 writer.WriteValue(BackupJob.Name);
                 writer.WritePropertyName("Repository type");
-                writer.WriteValue(ExtraRepositoryManager.AddExtraRepository(BackupJob.Repository).Type());
+                writer.WriteValue(ExtraRepository.Type());
                 writer.WritePropertyName("Repository Path");
-                writer.WriteValue(ExtraRepositoryManager.AddExtraRepository(BackupJob.Repository).RepositoryPath);
+                writer.WriteValue(ExtraRepository.RepositoryPath);
                 writer.WritePropertyName("StorageAlgorithm");
                 writer.WriteValue(StorageAlgorithm.ToString());
                 writer.WritePropertyName("removeAlgorithm");
@@ -261,6 +261,12 @@ namespace BackupsExtra.Entities
 
             string jsonPath = Path.Combine(_rootPath, BackupJob.Name + ".cfg");
             File.WriteAllText(jsonPath, stringWriter.ToString());
+        }
+
+        public override string ToString()
+        {
+            string log = $"Name: {Name};";
+            return log;
         }
     }
 }

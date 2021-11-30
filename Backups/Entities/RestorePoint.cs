@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Backups.Tools;
 
 namespace Backups.Entities
@@ -48,6 +49,13 @@ namespace Backups.Entities
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
             return DateTime.CompareTo(other.DateTime);
+        }
+
+        public override string ToString()
+        {
+            string log = $"Number: {Number}; Date: {DateTime};";
+            string jobObjects = string.Join<JobObject>(", ", JobObjects.ToArray());
+            return string.Concat(log, "Job objects: ", jobObjects);
         }
     }
 }

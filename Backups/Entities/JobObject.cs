@@ -26,5 +26,10 @@ namespace Backups.Entities
         {
             return Fullname != null ? Fullname.GetHashCode() : 0;
         }
+
+        public override string ToString()
+        {
+            return Fullname;
+        }
     }
 }

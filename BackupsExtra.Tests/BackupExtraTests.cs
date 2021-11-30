@@ -21,7 +21,7 @@ namespace BackupsExtra.Tests
         public void Setup()
         {
             _backupManager = new BackupManager(@".\Test");
-            _backupExtraManager = new BackupExtraManager(_backupManager);
+            _backupExtraManager = new BackupExtraManager(_backupManager, new ConsoleLogger());
             if (!Directory.Exists(@"./Test"))
                 Directory.CreateDirectory(@"./Test");
             if (Directory.Exists(@"./Test/TestJob"))

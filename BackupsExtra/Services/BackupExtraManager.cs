@@ -12,10 +12,12 @@ namespace BackupsExtra.Services
     public class BackupExtraManager
     {
         private BackupManager _backupManager;
+        private ILogger _logger;
 
-        public BackupExtraManager(BackupManager backupManager)
+        public BackupExtraManager(BackupManager backupManager, ILogger logger)
         {
             _backupManager = backupManager ?? throw new BackupsExtraException("Incorrect backupManager");
+            _logger = logger ?? throw new BackupsExtraException("Incorrect logger");
         }
 
         public ExtraBackupJob AddBackupJob(string name, IRepository repository, IAlgorithm storageAlgorithm, IRemoveAlgorithm removeAlgorithm, params JobObject[] jobObjects)
@@ -27,6 +29,7 @@ namespace BackupsExtra.Services
 
             var backupJob = new BackupJob(new Backup(), repository, name, storageAlgorithm, DateTime.Now, 0, jobObjects);
             var extraBackupJob = new ExtraBackupJob(backupJob, _backupManager.RootPath);
+            _logger.PrintLog("Create backup job " + extraBackupJob.ToString(), false);
             AddRemoveAlgorithmToJob(extraBackupJob, removeAlgorithm);
             return extraBackupJob;
         }
@@ -37,6 +40,7 @@ namespace BackupsExtra.Services
                 throw new BackupsExtraException("Incorrect name of Job");
 
             var extraBackupJob = new ExtraBackupJob(_backupManager.RootPath, name);
+            _logger.PrintLog("Open from config: " + extraBackupJob.ToString(), false);
             return extraBackupJob;
         }
 
@@ -49,6 +53,7 @@ namespace BackupsExtra.Services
 
             backupJob.RemoveAlgorithm = removeAlgorithm;
             removeAlgorithm.RemoveRestorePoints(backupJob);
+            _logger.PrintLog("Add removal algorithm: " + removeAlgorithm.ToString() + " To " + backupJob.ToString(), false);
         }
 
         public JobObject AddJobObject(string filename) => _backupManager.AddJobObject(filename);
@@ -60,6 +65,7 @@ namespace BackupsExtra.Services
                 throw new BackupsExtraException("incorrect restorePoint");
 
             ExtraRepositoryManager.AddExtraRepository(restorePoint.Repository).RestoreRestorePoint(restorePoint);
+            _logger.PrintLog("Restored: " + restorePoint, false);
         }
 
         public void Restore(RestorePoint restorePoint, string destination)
@@ -70,6 +76,36 @@ namespace BackupsExtra.Services
                 throw new BackupsExtraException("incorrect destination");
 
             ExtraRepositoryManager.AddExtraRepository(restorePoint.Repository).RestoreRestorePoint(restorePoint, destination);
+            _logger.PrintLog("Restored: " + restorePoint + " To: " + destination, false);
+        }
+
+        public void AddJobObjectToBackupJob(JobObject jobObject, ExtraBackupJob extraBackupJob)
+        {
+            if (jobObject is null)
+                throw new BackupsExtraException("Incorrect job object");
+            if (extraBackupJob is null)
+                throw new BackupsExtraException("Incorrect backup job");
+            extraBackupJob.AddJobObject(jobObject, DateTime.Now);
+            _logger.PrintLog("Add " + jobObject + " To " + extraBackupJob, false);
+        }
+
+        public void RemoveJobObjectFromBackupJob(JobObject jobObject, ExtraBackupJob extraBackupJob)
+        {
+            if (jobObject is null)
+                throw new BackupsExtraException("Incorrect job object");
+            if (extraBackupJob is null)
+                throw new BackupsExtraException("Incorrect backup job");
+            extraBackupJob.RemoveJobObject(jobObject, DateTime.Now);
+            _logger.PrintLog("Remove " + jobObject + " From " + extraBackupJob, false);
+        }
+
+        public RestorePoint CreateRestorePoint(ExtraBackupJob extraBackupJob)
+        {
+            if (extraBackupJob is null)
+                throw new BackupsExtraException("Incorrect backup job");
+            RestorePoint restorePoint = extraBackupJob.CreateRestorePoint(DateTime.Now);
+            _logger.PrintLog("Created restore point: " + restorePoint + " To " + extraBackupJob, false);
+            return restorePoint;
         }
     }
 }

@@ -44,13 +44,11 @@ namespace BackupsExtra.Entities
             {
                 using (var zip = new ZipArchive(File.Open(storagePath, FileMode.Open), ZipArchiveMode.Read))
                 {
-                    zip.ExtractToDirectory(Path.Combine(_localRepository.Path, "tmp"));
-                    Directory.GetFiles(Path.Combine(_localRepository.Path, "tmp")).ToList().ForEach(fileToCopy =>
+                    zip.Entries.ToList().ForEach(entry =>
                     {
-                        string restorePath = restorePoint.JobObjects.ToList().Find(jobObject => Path.GetFileName(fileToCopy) == jobObject.Name)?.Fullname;
-                        File.Copy(fileToCopy, restorePath, true);
+                        string restorePath = restorePoint.JobObjects.ToList().Find(jobObject => entry.Name == jobObject.Name)?.Fullname;
+                        entry.ExtractToFile(restorePath);
                     });
-                    Directory.Delete(Path.Combine(_localRepository.Path, "tmp"), true);
                 }
             });
         }

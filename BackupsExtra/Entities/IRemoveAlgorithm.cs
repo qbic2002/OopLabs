@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Backups.Entities;
 
 namespace BackupsExtra.Entities
 {
     public interface IRemoveAlgorithm
     {
-        void RemoveRestorePoints(BackupJob backupJob);
+        object Param { get; }
+        void RemoveRestorePoints(ExtraBackupJob extraBackupJob);
+        int GetRange(ExtraBackupJob extraBackupJob);
     }
 }

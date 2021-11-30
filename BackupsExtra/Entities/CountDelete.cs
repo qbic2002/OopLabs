@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Backups.Entities;
 using BackupsExtra.Services;
@@ -12,16 +13,27 @@ namespace BackupsExtra.Entities
         {
             if (maxRestorePoints <= 0)
                 throw new BackupsExtraException("Incorrect number of max restore points");
-            MaxRestorePoints = maxRestorePoints;
+            Param = maxRestorePoints;
         }
 
-        public int MaxRestorePoints { get; }
-        public void RemoveRestorePoints(BackupJob backupJob)
+        public object Param { get; }
+        public void RemoveRestorePoints(ExtraBackupJob extraBackupJob)
         {
-            IExtraRepository extraRepository = ExtraRepositoryManager.AddExtraRepository(backupJob.Repository);
-            List<RestorePoint> restorePoints = backupJob.RemoveRestorePointRange(0, backupJob.Backup.RestorePoints.Count - MaxRestorePoints);
+            int range = GetRange(extraBackupJob);
+            if (range > 0 && range < extraBackupJob.Backup.RestorePoints.Count)
+            {
+                extraBackupJob.RemoveRestorePointRangeWithMerge(0, range);
+            }
+        }
 
-            extraRepository.DeleteRestorePoints(restorePoints.ToArray());
+        public int GetRange(ExtraBackupJob extraBackupJob)
+        {
+            return Math.Max(extraBackupJob.Backup.RestorePoints.Count - (Param is int ? (int)Param : 0), 0);
+        }
+
+        public override string ToString()
+        {
+            return "CountDelete";
         }
     }
 }

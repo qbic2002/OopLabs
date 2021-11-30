@@ -22,9 +22,9 @@ namespace BackupsExtra.Services
 
             oldJobObjects.ForEach(oldJobObject =>
             {
-                if (newerJobObjects.Exists(newerJobObject => newerJobObject.Fullname == oldJobObject.Fullname))
+                if (newerJobObjects.Exists(newerJobObject => newerJobObject.Equals(oldJobObject)))
                 {
-                    newerJobObjects.Add(newerJobObjects.Find(newerJobObject => newerJobObject.Fullname == oldJobObject.Fullname));
+                    newJobObjects.Add(newerJobObjects.Find(newerJobObject => newerJobObject.Fullname == oldJobObject.Fullname));
                 }
                 else
                 {

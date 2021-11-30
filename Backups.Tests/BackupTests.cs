@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Backups.Entities;
 using Backups.Services;
@@ -34,7 +35,7 @@ namespace Backups.Tests
             JobObject jobObject2 = _backupManager.AddJobObject(@".\Test\File2.txt");
             
             BackupJob job = _backupManager.AddBackupJob("TestJob", _localRepository, new SplitStorage(), jobObject1, jobObject2);
-            job.RemoveJobObject(jobObject1);
+            job.RemoveJobObject(jobObject1, DateTime.Now);
             Assert.AreEqual(2, job.Backup.RestorePoints.Count);
             int numberOfStorages = 0;
             job.Backup.RestorePoints.ToList().ForEach(restorePoint => numberOfStorages += restorePoint.Storages.Count);
@@ -52,7 +53,7 @@ namespace Backups.Tests
             JobObject jobObject2 = _backupManager.AddJobObject(@".\Test\File2.txt");
             
             BackupJob job = _backupManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), jobObject1, jobObject2);
-            job.RemoveJobObject(jobObject1);
+            job.RemoveJobObject(jobObject1, DateTime.Now);
         }
     }
 }

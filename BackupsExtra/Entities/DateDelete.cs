@@ -11,22 +11,37 @@ namespace BackupsExtra.Entities
     {
         public DateDelete(DateTime dateTime)
         {
-            DateTime = dateTime;
+            Param = dateTime;
         }
 
-        public DateTime DateTime { get; }
-        public void RemoveRestorePoints(BackupJob backupJob)
+        public object Param { get; }
+        public void RemoveRestorePoints(ExtraBackupJob extraBackupJob)
         {
-            IExtraRepository extraRepository = ExtraRepositoryManager.AddExtraRepository(backupJob.Repository);
-            if (backupJob.Backup.RestorePoints.ToList().All(restorePoint => restorePoint.DateTime < DateTime))
+            if (extraBackupJob.Backup.RestorePoints.ToList().All(restorePoint => restorePoint.DateTime < (Param is DateTime ? (DateTime)Param : default)))
                 throw new BackupsExtraException("Cannot remove all restore points");
-            var restorePoints = backupJob.Backup.RestorePoints.ToList();
-            restorePoints.Sort();
-            for (int i = 0; i < restorePoints.Count; i++)
+
+            int count = GetRange(extraBackupJob);
+
+            if (count > 0)
             {
-                if (restorePoints[i].DateTime < DateTime)
-                    extraRepository.DeleteRestorePoints(backupJob.RemoveRestorePoint(i));
+                extraBackupJob.RemoveRestorePointRangeWithMerge(0, count);
             }
+        }
+
+        public int GetRange(ExtraBackupJob extraBackupJob)
+        {
+            int count = 0;
+            extraBackupJob.Backup.RestorePoints.ToList().ForEach(restorePoint =>
+            {
+                if (restorePoint.DateTime < (Param is DateTime ? (DateTime)Param : default))
+                    ++count;
+            });
+            return count;
+        }
+
+        public override string ToString()
+        {
+            return "DateDelete";
         }
     }
 }

@@ -6,6 +6,7 @@ using Backups.Entities;
 using Backups.Services;
 using BackupsExtra.Entities;
 using BackupsExtra.Tools;
+using Newtonsoft.Json;
 
 namespace BackupsExtra.Services
 {
@@ -20,7 +21,7 @@ namespace BackupsExtra.Services
             _logger = logger ?? throw new BackupsExtraException("Incorrect logger");
         }
 
-        public ExtraBackupJob AddBackupJob(string name, IRepository repository, IAlgorithm storageAlgorithm, IRemoveAlgorithm removeAlgorithm, params JobObject[] jobObjects)
+        public ExtraBackupJob AddBackupJob(string name, IRepository repository, IAlgorithm storageAlgorithm, RemoveAlgorithm removeAlgorithm, params JobObject[] jobObjects)
         {
             if (name is null)
                 throw new BackupsExtraException("Incorrect name of Job");
@@ -38,13 +39,15 @@ namespace BackupsExtra.Services
         {
             if (name is null)
                 throw new BackupsExtraException("Incorrect name of Job");
-
-            var extraBackupJob = new ExtraBackupJob(_backupManager.RootPath, name);
+            string jsonPath = Path.Combine(_backupManager.RootPath, name + ".cfg");
+            if (!File.Exists(jsonPath))
+                throw new BackupsExtraException("Incorrect name");
+            ExtraBackupJob extraBackupJob = JsonConvert.DeserializeObject<ExtraBackupJobSerializer>(File.ReadAllText(jsonPath)).ToExtraBackupJob(_backupManager.RootPath);
             _logger.PrintLog("Open from config: " + extraBackupJob.ToString(), false);
             return extraBackupJob;
         }
 
-        public void AddRemoveAlgorithmToJob(ExtraBackupJob backupJob, IRemoveAlgorithm removeAlgorithm)
+        public void AddRemoveAlgorithmToJob(ExtraBackupJob backupJob, RemoveAlgorithm removeAlgorithm)
         {
             if (backupJob is null)
                 throw new BackupsExtraException("Incorrect backup job");
@@ -53,7 +56,7 @@ namespace BackupsExtra.Services
 
             backupJob.RemoveAlgorithm = removeAlgorithm;
             removeAlgorithm.RemoveRestorePoints(backupJob);
-            _logger.PrintLog("Add removal algorithm: " + removeAlgorithm.ToString() + " To " + backupJob.ToString(), false);
+            _logger.PrintLog("Add removal algorithm To " + backupJob.ToString(), false);
         }
 
         public JobObject AddJobObject(string filename) => _backupManager.AddJobObject(filename);

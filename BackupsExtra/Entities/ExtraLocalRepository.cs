@@ -47,7 +47,7 @@ namespace BackupsExtra.Entities
                     zip.Entries.ToList().ForEach(entry =>
                     {
                         string restorePath = restorePoint.JobObjects.ToList().Find(jobObject => entry.Name == jobObject.Name)?.Fullname;
-                        entry.ExtractToFile(restorePath);
+                        entry.ExtractToFile(restorePath, true);
                     });
                 }
             });

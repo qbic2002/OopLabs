@@ -7,6 +7,7 @@ using Backups.Entities;
 using Backups.Services;
 using BackupsExtra.Entities;
 using BackupsExtra.Services;
+using Newtonsoft.Json;
 
 namespace BackupsExtra
 {
@@ -28,7 +29,7 @@ namespace BackupsExtra
         {
             JobObject jobObject1 = _backupExtraManager.AddJobObject(@"C:\Users\golov\GitLabs\tst\File1.txt");
             JobObject jobObject2 = _backupExtraManager.AddJobObject(@"C:\Users\golov\GitLabs\tst\File2.txt");
-            ExtraBackupJob job = _backupExtraManager.AddBackupJob("testJob", _localRepository, new SplitStorage(), new CountDelete(3), jobObject1, jobObject2);
+            ExtraBackupJob job = _backupExtraManager.AddBackupJob("testJob", _localRepository, new SplitStorage(), new RemoveAlgorithm(false, new CountPredicate(3)), jobObject1, jobObject2);
 
             _backupExtraManager.RemoveJobObjectFromBackupJob(jobObject1, job);
             _backupExtraManager.CreateRestorePoint(job);

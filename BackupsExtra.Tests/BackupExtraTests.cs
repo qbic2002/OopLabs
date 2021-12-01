@@ -39,7 +39,7 @@ namespace BackupsExtra.Tests
             JobObject jobObject1 = _backupExtraManager.AddJobObject(@".\Test\File1.txt");
             JobObject jobObject2 = _backupExtraManager.AddJobObject(@".\Test\File2.txt");
             
-            ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new CountDelete(3), jobObject1, jobObject2);
+            ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new RemoveAlgorithm(true, new CountPredicate(3)), jobObject1, jobObject2);
             job.CreateRestorePoint(DateTime.Now);
             job.CreateRestorePoint(DateTime.Now);
             for (int i = 0; i < 20; i++)
@@ -59,7 +59,7 @@ namespace BackupsExtra.Tests
             JobObject jobObject1 = _backupExtraManager.AddJobObject(@".\Test\File1.txt");
             JobObject jobObject2 = _backupExtraManager.AddJobObject(@".\Test\File2.txt");
             
-            ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new DateDelete(DateTime.Today), jobObject1, jobObject2);
+            ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new RemoveAlgorithm(true,new DatePredicate(DateTime.Today)), jobObject1, jobObject2);
             job.CreateRestorePoint(DateTime.Now);
             job.CreateRestorePoint(DateTime.Now);
             for (int i = 0; i < 20; i++)
@@ -81,7 +81,7 @@ namespace BackupsExtra.Tests
 
             Assert.Catch<BackupsExtraException>(() =>
             {
-                ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new DateDelete(DateTime.Today + new TimeSpan(1,0, 0, 0)), jobObject1, jobObject2);
+                ExtraBackupJob job = _backupExtraManager.AddBackupJob("TestJob", _localRepository, new SingleStorage(), new RemoveAlgorithm(true,new DatePredicate(DateTime.Today + new TimeSpan(1,0, 0, 0))), jobObject1, jobObject2);
             });
         }
 

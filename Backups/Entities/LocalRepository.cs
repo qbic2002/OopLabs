@@ -25,8 +25,8 @@ namespace Backups.Entities
         {
             if (Path is null)
                 throw new BackupException("Incorrect path");
-            if (Directory.Exists(Path))
-                throw new BackupException("Repository already exists");
+            /*if (Directory.Exists(Path))
+                throw new BackupException("Repository already exists");*/
             Directory.CreateDirectory(Path);
         }
 
@@ -37,9 +37,8 @@ namespace Backups.Entities
 
             string restorePointName = string.Concat("RP", restorePoint.Number);
             string restorePointPath = System.IO.Path.Combine(Path, restorePointName);
-            if (Directory.Exists(restorePointPath))
-                throw new BackupException("Restore point already created");
-            Directory.CreateDirectory(restorePointPath);
+            if (!Directory.Exists(restorePointPath))
+                Directory.CreateDirectory(restorePointPath);
         }
 
         public void AddStorages(RestorePoint restorePoint, params Storage[] storages)
@@ -52,16 +51,19 @@ namespace Backups.Entities
             {
                 string storageName = System.IO.Path.ChangeExtension(storage.Name, ".zip");
                 string storagePath = System.IO.Path.Combine(restorePointPath, storageName);
-                var zipArc = new ZipArchive(File.Open(storagePath, FileMode.Create), ZipArchiveMode.Create);
-                zipArc.Dispose();
-                storage.JobObjects.ToList().ForEach(jobObject =>
+                if (!File.Exists(storagePath))
                 {
-                    using (var zip = new ZipArchive(File.Open(storagePath, FileMode.Open), ZipArchiveMode.Update))
+                    var zipArc = new ZipArchive(File.Open(storagePath, FileMode.Create), ZipArchiveMode.Create);
+                    zipArc.Dispose();
+                    storage.JobObjects.ToList().ForEach(jobObject =>
                     {
-                        zip.CreateEntryFromFile(jobObject.Fullname, jobObject.Name);
-                        zip.Dispose();
-                    }
-                });
+                        using (var zip = new ZipArchive(File.Open(storagePath, FileMode.Open), ZipArchiveMode.Update))
+                        {
+                            zip.CreateEntryFromFile(jobObject.Fullname, jobObject.Name);
+                            zip.Dispose();
+                        }
+                    });
+                }
             });
         }
     }

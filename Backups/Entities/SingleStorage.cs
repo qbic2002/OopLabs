@@ -12,5 +12,10 @@ namespace Backups.Entities
             var storages = new List<Storage> { new Storage("Storage", jobObjects) };
             return storages;
         }
+
+        public override string ToString()
+        {
+            return "SingleStorage";
+        }
     }
 }

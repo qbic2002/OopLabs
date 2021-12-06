@@ -14,5 +14,10 @@ namespace Backups.Entities
             jobObjects.ToList().ForEach(jobObject => storages.Add(new Storage(jobObject.NameWithoutExtension, jobObject)));
             return storages;
         }
+
+        public override string ToString()
+        {
+            return "SplitStorage";
+        }
     }
 }
